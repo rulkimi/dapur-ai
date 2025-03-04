@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Button from '../components/button.vue';
-import FormInput from '../components/form-input.vue';
+import PreferenceLayout from '../layouts/preference-layout.vue';
+import Allergies from '../components/preferences/allergies.vue';
 import { ref } from 'vue';
 import { capitalizeFirstLetter } from '../utils';
 
@@ -15,33 +16,6 @@ const dietaryRestrictions: string[] = [
   "rendah lemak"
 ]
 
-const allergy = ref<string>('')
-const allergies = ref<string[]>([])
-const commonAllergies = [
-  "kacang tanah",
-  "kacang pokok",
-  "makanan laut (kerang, udang, ketam)",
-  "ikan",
-  "telur",
-  "susu",
-  "soya",
-  "gandum"
-]
-const handleEnterKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Enter' && allergy.value.trim() !== '') addAllergy(allergy.value);
-}
-const addAllergy = (newAllergy: string) => {
-  if (allergies.value.includes(newAllergy)) {
-    allergy.value = ''
-    return
-  }
-  allergies.value = [...allergies.value, newAllergy]
-  allergy.value = ''
-}
-const removeAllergy = (index: number) => {
-  allergies.value = allergies.value.filter((_, i) => i !== index);
-}
-
 const cuisines: string[] = [
   "melayu",
   "cina",
@@ -52,6 +26,8 @@ const cuisines: string[] = [
   "arab",
   "itali"
 ]
+
+const allergies = ref<string[]>([])
 
 interface PreferredSpice {
   name: string
@@ -72,9 +48,10 @@ const preferredSpice = ref<string>('mild')
       <span class="block text-slate-500">Kami akan cadangkan resipi yang sesuai dengan selara anda</span>
     </div>
 
-    <div class="space-y-2">
-      <h3 class="text-xl font-semibold">Ada sebarang keperluan diet?</h3>
-      <span class="block text-slate-500">Pilih semua yang berkaitan</span>
+    <PreferenceLayout
+      title="Ada sebarang keperluan diet?"
+      subtitle="Pilih semua yang berkaitan"
+    >
       <ul class="grid grid-cols-4 gap-y-1">
         <li
           v-for="diet in dietaryRestrictions"
@@ -85,61 +62,16 @@ const preferredSpice = ref<string>('mild')
           <label :for="diet">{{ capitalizeFirstLetter(diet) }}</label>
         </li>
       </ul>
-    </div>
+    </PreferenceLayout>
 
-    <div class="space-y-2">
-      <h3 class="text-xl font-semibold">
-        Ada sebarang alahan atau bahan yang ingin dielakkan?
-      </h3>
-      <div class="flex items-center gap-2">
-        <FormInput
-          id="allergy"
-          v-model="allergy"
-          class="flex-grow"
-          placeholder="Taip alahan atau bahan yang ingin dielakkan..."
-          @keyup.enter="handleEnterKeydown"
-        />
-        <Button
-          variant="primary-outline"
-          icon="plus"
-          @click="addAllergy(allergy)"
-        >
-          Tambah
-        </Button>
-      </div>
-      <div class="space-y-2">
-        <span class="block text-slate-500">Alergi biasa:</span>
-        <ul class="flex flex-wrap gap-1">
-          <li
-            v-for="allergy in commonAllergies"
-            :key="allergy"
-            class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
-            @click="addAllergy(allergy)"
-          >
-            {{ capitalizeFirstLetter(allergy) }}
-          </li>
-        </ul>
-
-        <span class="block text-slate-500">Alergi anda:</span>
-        <ul class="flex flex-wrap gap-1">
-          <li
-            v-for="(allergy, index) in allergies"
-            :key="allergy"
-            class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
-          >
-            {{ capitalizeFirstLetter(allergy) }}
-            <font-awesome-icon
-              :icon="['fas', 'times']"
-              @click="removeAllergy(index)"
-            />
-          </li>
-        </ul>
-      </div>
-    </div>
+    <PreferenceLayout title="Ada sebarang alahan atau bahan yang ingin dielakkan?">
+      <Allergies v-model="allergies" /> 
+    </PreferenceLayout>
     
-    <div class="space-y-2">
-      <h3 class="text-xl font-semibold">Masakan mana yang ada gemari?</h3>
-      <span class="block text-slate-500">Pilih semua yang berkaitan</span>
+    <PreferenceLayout
+      title="Masakan mana yang ada gemari?"
+      subtitle="Pilih semua yang berkaitan"
+    >
       <ul class="grid grid-cols-2 gap-y-1">
         <li
           v-for="cuisine in cuisines"
@@ -150,10 +82,9 @@ const preferredSpice = ref<string>('mild')
           <label :for="cuisine">{{ capitalizeFirstLetter(cuisine) }}</label>
         </li>
       </ul>
-    </div>
+    </PreferenceLayout>
 
-    <div class="space-y-2">
-      <h3 class="text-xl font-semibold">Sejauh mana tahap kepedasan yang anda suka?</h3>
+    <PreferenceLayout title="Sejauh mana tahap kepedasan yang anda suka?">
       <ul>
         <li
           v-for="spice in preferredSpices"
@@ -172,7 +103,7 @@ const preferredSpice = ref<string>('mild')
           </label>
         </li>
       </ul>
-    </div>
+    </PreferenceLayout>
 
     <div class="flex justify-end">
       <Button icon="bookmark">
