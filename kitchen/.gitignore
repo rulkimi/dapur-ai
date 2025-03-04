@@ -1,0 +1,12 @@
+/.env
+/.project
+/poetry.lock
+/__pycache__
+pyproject.toml
+.python-version
+/notes/*
+/tasks/*
+*.cpython-313.pyc
+/.cursor
+.cursorrules
+logs/*

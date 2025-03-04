@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+asyncpg
+pydantic
+pydantic-settings
+python-jose
+passlib[bcrypt]
+python-multipart
+alembic
+pytest
+pytest-asyncio
+httpx
+python-dotenv
+email-validator
