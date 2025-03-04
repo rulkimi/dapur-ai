@@ -16,7 +16,9 @@ import {
   faEnvelope,
   faHome,
   faPlus,
-  faFloppyDisk,
+  // faFloppyDisk,
+  faBookmark,
+  faTimes,
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
@@ -31,7 +33,9 @@ library.add(
   faEnvelope,
   faHome,
   faPlus,
-  faFloppyDisk,
+  // faFloppyDisk,
+  faBookmark,
+  faTimes,
 )
 
 export default FontAwesomeIcon;

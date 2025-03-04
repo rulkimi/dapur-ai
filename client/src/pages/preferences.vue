@@ -16,6 +16,7 @@ const dietaryRestrictions: string[] = [
 ]
 
 const allergy = ref<string>('')
+const allergies = ref<string[]>([])
 const commonAllergies = [
   "kacang tanah",
   "kacang pokok",
@@ -26,6 +27,20 @@ const commonAllergies = [
   "soya",
   "gandum"
 ]
+const handleEnterKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter' && allergy.value.trim() !== '') addAllergy(allergy.value);
+}
+const addAllergy = (newAllergy: string) => {
+  if (allergies.value.includes(newAllergy)) {
+    allergy.value = ''
+    return
+  }
+  allergies.value = [...allergies.value, newAllergy]
+  allergy.value = ''
+}
+const removeAllergy = (index: number) => {
+  allergies.value = allergies.value.filter((_, i) => i !== index);
+}
 
 const cuisines: string[] = [
   "melayu",
@@ -82,10 +97,12 @@ const preferredSpice = ref<string>('mild')
           v-model="allergy"
           class="flex-grow"
           placeholder="Taip alahan atau bahan yang ingin dielakkan..."
+          @keyup.enter="handleEnterKeydown"
         />
         <Button
           variant="primary-outline"
           icon="plus"
+          @click="addAllergy(allergy)"
         >
           Tambah
         </Button>
@@ -97,8 +114,24 @@ const preferredSpice = ref<string>('mild')
             v-for="allergy in commonAllergies"
             :key="allergy"
             class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
+            @click="addAllergy(allergy)"
           >
             {{ capitalizeFirstLetter(allergy) }}
+          </li>
+        </ul>
+
+        <span class="block text-slate-500">Alergi anda:</span>
+        <ul class="flex flex-wrap gap-1">
+          <li
+            v-for="(allergy, index) in allergies"
+            :key="allergy"
+            class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
+          >
+            {{ capitalizeFirstLetter(allergy) }}
+            <font-awesome-icon
+              :icon="['fas', 'times']"
+              @click="removeAllergy(index)"
+            />
           </li>
         </ul>
       </div>
@@ -142,7 +175,7 @@ const preferredSpice = ref<string>('mild')
     </div>
 
     <div class="flex justify-end">
-      <Button icon="floppy-disk">
+      <Button icon="bookmark">
         Simpan Citarasa
       </Button>
     </div>
