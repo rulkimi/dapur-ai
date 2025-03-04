@@ -8,14 +8,18 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import {
   faArrowRightFromBracket,
   faArrowRightToBracket,
-  faMagnifyingGlass
+  faMagnifyingGlass,
+  faClock,
+  faUtensils,
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
 library.add(
   faArrowRightFromBracket,
   faArrowRightToBracket,
-  faMagnifyingGlass
+  faMagnifyingGlass,
+  faClock,
+  faUtensils,
 )
 
 export default FontAwesomeIcon;
