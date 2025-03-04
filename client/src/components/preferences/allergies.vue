@@ -75,6 +75,7 @@ const removeAllergy = (index: number) => {
       >
         {{ capitalizeFirstLetter(allergy) }}
         <font-awesome-icon
+          class="hover:scale-110 hover:text-slate-800 transition-all duration-300"
           :icon="['fas', 'times']"
           @click="removeAllergy(index)"
         />
