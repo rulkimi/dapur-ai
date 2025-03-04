@@ -12,6 +12,9 @@ import {
   faClock,
   faUtensils,
   faKitchenSet,
+  faLock,
+  faEnvelope,
+  faHome,
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
@@ -22,6 +25,9 @@ library.add(
   faClock,
   faUtensils,
   faKitchenSet,
+  faLock,
+  faEnvelope,
+  faHome,
 )
 
 export default FontAwesomeIcon;

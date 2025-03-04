@@ -7,7 +7,9 @@ import Button from '../button.vue'
     <div class="space-y-6 md:w-1/2">
       <div class="space-y-2">
         <h1 class="text-4xl font-semibold">Resipi Sesuai Dengan Apa Yang Anda Ada</h1>
-        <span class="block text-xl max-w-lg text-slate-500">Cari idea makanan yang sedap menggunakan bahan-bahan yang anda sudah ada di dapur.</span>
+        <span class="block text-xl max-w-lg text-slate-500">
+          Cari idea makanan yang sedap menggunakan bahan-bahan yang anda sedia ada di dapur anda.
+        </span>
       </div>
       <Button size="lg" icon="magnifying-glass">Cari Resipi</Button>
     </div>

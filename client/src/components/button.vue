@@ -1,10 +1,17 @@
 <script setup lang="ts">
-defineProps<{
+interface ButtonProps {
   variant?: 'primary' | 'primary-outline';
   size?: 'md' | 'lg' | 'sm';
   icon?: string
   iconPosition?: 'start' | 'end'
-}>();
+  width?: 'fit' | 'full'
+}
+
+withDefaults(defineProps<ButtonProps>(), {
+  variant: 'primary',
+  size: 'md',
+  width: 'fit'
+})
 
 const buttonVariant = {
   'primary': 'text-white bg-gradient-to-t to-teal-500 via-teal-600 from-teal-700 bg-size-200 bg-pos-0 hover:bg-pos-100',
@@ -16,14 +23,20 @@ const buttonSize = {
   'lg': 'px-4 py-2',
   'sm': 'px-2 py-1'
 }
+
+const buttonWidth = {
+  'fit' : 'w-fit',
+  'full' : 'w-full justify-center'
+}
 </script>
 
 <template>
   <button
-    class="flex items-center gap-2 rounded-lg transition-all duration-300 w-fit"
+    class="flex items-center gap-2 rounded-lg transition-all duration-300"
     :class="[
-      buttonSize[size ? size : 'md'],
-      buttonVariant[variant ? variant : 'primary']
+      buttonSize[size],
+      buttonVariant[variant],
+      buttonWidth[width]
     ]"
   >
     <font-awesome-icon v-if="icon" :icon="['fas', icon]" />

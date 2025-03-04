@@ -7,9 +7,16 @@ const route = useRoute();
 </script>
 
 <template>
-  <AppHeader />
-  <div class="max-w-7xl mx-auto p-6">
-    <slot></slot>
-  </div>
+  <template v-if="route.path !== '/auth'">
+    <AppHeader />
+    <div class="max-w-7xl mx-auto p-6">
+      <slot></slot>
+    </div>
+  </template>
+  <template v-else>
+    <div class="min-h-screen flex items-center justify-center">
+      <slot></slot>
+    </div>
+  </template>
   <AppFooter v-if="route.path === '/'"/>
 </template>
