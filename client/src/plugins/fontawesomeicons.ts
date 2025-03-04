@@ -11,6 +11,7 @@ import {
   faMagnifyingGlass,
   faClock,
   faUtensils,
+  faKitchenSet,
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
@@ -20,6 +21,7 @@ library.add(
   faMagnifyingGlass,
   faClock,
   faUtensils,
+  faKitchenSet,
 )
 
 export default FontAwesomeIcon;
