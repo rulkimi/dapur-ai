@@ -14,7 +14,7 @@ withDefaults(defineProps<ButtonProps>(), {
 })
 
 const buttonVariant = {
-  'primary': 'text-white bg-gradient-to-t to-teal-500 via-teal-600 from-teal-700 bg-size-200 bg-pos-0 hover:bg-pos-100',
+  'primary': 'text-white bg-gradient-to-t to-teal-400 via-teal-500 from-teal-600 bg-size-200 bg-pos-0 hover:bg-pos-100',
   'primary-outline': 'border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white'
 };
 
