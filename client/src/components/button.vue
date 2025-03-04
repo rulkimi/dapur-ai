@@ -20,7 +20,7 @@ const buttonSize = {
 
 <template>
   <button
-    class="flex items-center gap-2 rounded-lg transition-all duration-300"
+    class="flex items-center gap-2 rounded-lg transition-all duration-300 w-fit"
     :class="[
       buttonSize[size ? size : 'md'],
       buttonVariant[variant ? variant : 'primary']

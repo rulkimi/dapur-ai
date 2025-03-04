@@ -21,10 +21,10 @@ const features: Feature[] = [
 </script>
 
 <template>
-  <section class="space-y-8">
+  <section class="space-y-8 py-12">
     <div class="max-w-2xl mx-auto space-y-2 text-center">
-      <h2 class="text-4xl font-semibold">Kenapa DapurAI?</h2>
-      <span class="block text-slate-500">
+      <h2 class="text-3xl font-semibold">Kenapa DapurAI?</h2>
+      <span class="block text-xl text-slate-500">
         Platform kami membantu anda menyediakan makanan berkhasiat dan memuaskan dengan usaha minimum.
       </span>
     </div>
