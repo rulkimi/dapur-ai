@@ -25,7 +25,7 @@ const handleInput = (event: Event) => {
     <div class="relative">
       <input
         :id="id"
-        class="w-full border border-gray-200 rounded-lg px-3 py-1 focus:outline-teal-500 peer"
+        class="w-full h-[36px] border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-teal-500 peer"
         :class="icon ? 'pl-8' : ''"
         :type="type"
         :value="modelValue"

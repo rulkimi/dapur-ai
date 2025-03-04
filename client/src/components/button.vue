@@ -32,7 +32,7 @@ const buttonWidth = {
 
 <template>
   <button
-    class="flex items-center gap-2 rounded-lg transition-all duration-300"
+    class="flex h-[36px] items-center gap-2 rounded-lg transition-all duration-300"
     :class="[
       buttonSize[size],
       buttonVariant[variant],
