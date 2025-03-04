@@ -2,6 +2,8 @@
 defineProps<{
   variant?: 'primary' | 'primary-outline';
   size?: 'md' | 'lg' | 'sm';
+  icon?: string
+  iconPosition?: 'start' | 'end'
 }>();
 
 const buttonClasses = {
@@ -24,6 +26,8 @@ const buttonSize = {
       buttonClasses[variant ? variant : 'primary']
     ]"
   >
+    <font-awesome-icon v-if="icon" :icon="['fas', icon]" />
+    <slot v-else name="icon"></slot>
     <slot></slot>
   </button>
 </template>

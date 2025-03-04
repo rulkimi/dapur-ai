@@ -7,13 +7,15 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 /* import specific icons */
 import {
   faArrowRightFromBracket,
-  faArrowRightToBracket 
+  faArrowRightToBracket,
+  faMagnifyingGlass
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
 library.add(
   faArrowRightFromBracket,
-  faArrowRightToBracket
+  faArrowRightToBracket,
+  faMagnifyingGlass
 )
 
 export default FontAwesomeIcon;
