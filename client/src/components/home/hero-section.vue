@@ -11,7 +11,13 @@ import Button from '../button.vue'
           Cari idea makanan yang sedap menggunakan bahan-bahan yang anda sedia ada di dapur anda.
         </span>
       </div>
-      <Button size="lg" icon="magnifying-glass">Cari Resipi</Button>
+      <Button
+        class="shadow-lg hover:shadow-sm"
+        size="lg"
+        icon="magnifying-glass"
+      >
+        Cari Resipi
+      </Button>
     </div>
     <div class="md:w-1/2">
       <img
