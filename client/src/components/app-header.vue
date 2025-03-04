@@ -7,7 +7,7 @@ import Button from './button.vue';
     <div class="max-w-7xl mx-auto py-3 px-6 flex items-center justify-between">
       <div>Dapur AI</div>
       <Button variant="primary-outline" icon="arrow-right-to-bracket">
-        Sign in
+        Log masuk
       </Button>
     </div>
   </header>

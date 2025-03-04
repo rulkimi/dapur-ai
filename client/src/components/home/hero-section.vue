@@ -6,10 +6,10 @@ import Button from '../button.vue'
   <section class="flex flex-col md:flex-row items-center gap-12 md:my-24">
     <div class="space-y-6 md:w-1/2">
       <div class="space-y-2">
-        <h1 class="text-5xl font-semibold">Find Perfect Recipes With What You Have</h1>
-        <span class="block max-w-lg">Discover delicious meal ideas using ingredients you already have in your kitchen.</span>
+        <h1 class="text-5xl font-semibold">Resipi Sesuai Dengan Apa Yang Anda Ada</h1>
+        <span class="block max-w-lg">Cari idea makanan yang sedap menggunakan bahan-bahan yang anda sudah ada di dapur.</span>
       </div>
-      <Button size="lg" icon="magnifying-glass">Get Started</Button>
+      <Button size="lg" icon="magnifying-glass">Cari Resipi</Button>
     </div>
     <div class="md:w-1/2">
       <img
