@@ -2,48 +2,13 @@
 import Button from '../components/button.vue';
 import PreferenceLayout from '../layouts/preference-layout.vue';
 import Allergies from '../components/preferences/allergies.vue';
+import DietaryRestrictions from '../components/preferences/dietary-restrictions.vue';
+import PreferredCuisines from '../components/preferences/preferred-cuisines.vue';
 import { ref } from 'vue';
 import { capitalizeFirstLetter } from '../utils';
 
-const dietaryRestrictionExamples: string[] = [
-  "vegetarian",
-  "vegan",
-  "bebas gluten",
-  "bebas tenusu",
-  "keto",
-  "paleo",
-  "rendah karbohidrat",
-  "rendah lemak"
-]
 const dietaryRestrictions = ref<string[]>([]);
-const handleDietaryRestrictions = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  const isChecked = target.checked;
-  const value = target.id;
-  const newValue = isChecked ? [...dietaryRestrictions.value, value] : dietaryRestrictions.value.filter((item) => item !== value);
-  dietaryRestrictions.value = newValue;
-};
-
-const cuisineExamples: string[] = [
-  "melayu",
-  "cina",
-  "india",
-  "indonesia",
-  "asia",
-  "barat",
-  "arab",
-  "itali"
-]
-const prefferedCuisines = ref<string[]>([])
-const handleCuisines = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  const isChecked = target.checked;
-  const value = target.id;
-  const newValue = isChecked ? [...prefferedCuisines.value, value] : prefferedCuisines.value.filter((item) => item !== value);
-  prefferedCuisines.value = newValue;
-};
-
-
+const preferredCuisines = ref<string[]>([]);
 const allergies = ref<string[]>([])
 
 interface PreferredSpice {
@@ -61,7 +26,7 @@ const savePreferences = () => {
   const food_preferences = {
     dietary_restrictions: dietaryRestrictions.value,
     allergies: allergies.value,
-    preferred_cuisines: prefferedCuisines.value,
+    preferred_cuisines: preferredCuisines.value,
     spice_level: preferredSpice.value
   }
   console.table(food_preferences)
@@ -75,26 +40,14 @@ const savePreferences = () => {
       <span class="block text-slate-500">Kami akan cadangkan resipi yang sesuai dengan selara anda</span>
     </div>
 
-    <form @submit.prevent="savePreferences">
+    <form @submit.prevent="savePreferences" class="space-y-6">
       <PreferenceLayout
         title="Ada sebarang keperluan diet?"
         subtitle="Pilih semua yang berkaitan"
       >
-        <ul class="grid grid-cols-4 gap-y-1">
-          <li
-            v-for="diet in dietaryRestrictionExamples"
-            :key="diet"
-            class="flex items-baseline gap-2"
-          >
-            <input
-              type="checkbox"
-              :id="diet"
-              @change="handleDietaryRestrictions"
-            >
-            <label :for="diet">{{ capitalizeFirstLetter(diet) }}</label>
-          </li>
-        </ul>
+        <DietaryRestrictions v-model="dietaryRestrictions" />
       </PreferenceLayout>
+
       <PreferenceLayout title="Ada sebarang alahan atau bahan yang ingin dielakkan?">
         <Allergies v-model="allergies" />
       </PreferenceLayout>
@@ -103,21 +56,9 @@ const savePreferences = () => {
         title="Masakan mana yang ada gemari?"
         subtitle="Pilih semua yang berkaitan"
       >
-        <ul class="grid grid-cols-2 gap-y-1">
-          <li
-            v-for="cuisine in cuisineExamples"
-            :key="cuisine"
-            class="flex items-baseline gap-2"
-          >
-            <input
-              type="checkbox"
-              :id="cuisine"
-              @change="handleCuisines"
-            >
-            <label :for="cuisine">{{ capitalizeFirstLetter(cuisine) }}</label>
-          </li>
-        </ul>
+        <PreferredCuisines v-model="preferredCuisines" />
       </PreferenceLayout>
+
       <PreferenceLayout title="Sejauh mana tahap kepedasan yang anda suka?">
         <ul>
           <li
@@ -138,6 +79,7 @@ const savePreferences = () => {
           </li>
         </ul>
       </PreferenceLayout>
+
       <div class="flex justify-end">
         <Button icon="bookmark" type="submit">
           Simpan Citarasa
