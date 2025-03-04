@@ -6,8 +6,8 @@ defineProps<{
   iconPosition?: 'start' | 'end'
 }>();
 
-const buttonClasses = {
-  'primary': 'bg-gradient-to-b from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white',
+const buttonVariant = {
+  'primary': 'text-white bg-gradient-to-t to-teal-500 via-teal-600 from-teal-700 bg-size-200 bg-pos-0 hover:bg-pos-100',
   'primary-outline': 'border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white'
 };
 
@@ -20,10 +20,10 @@ const buttonSize = {
 
 <template>
   <button
-    class="flex items-center gap-2 rounded-lg transition-colors duration-300"
+    class="flex items-center gap-2 rounded-lg transition-all duration-300"
     :class="[
       buttonSize[size ? size : 'md'],
-      buttonClasses[variant ? variant : 'primary']
+      buttonVariant[variant ? variant : 'primary']
     ]"
   >
     <font-awesome-icon v-if="icon" :icon="['fas', icon]" />
