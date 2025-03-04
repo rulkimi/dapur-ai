@@ -4,8 +4,6 @@ import BaseLayout from './layouts/base-layout.vue';
 
 <template>
   <BaseLayout>
-    <h1 class="text-3xl font-bold underline">
-      Hello world!
-    </h1>
+    <router-view></router-view>
   </BaseLayout>
 </template>
