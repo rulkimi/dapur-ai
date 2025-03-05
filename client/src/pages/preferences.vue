@@ -5,6 +5,7 @@ import Allergies from '../components/preferences/allergies.vue';
 import DietaryRestrictions from '../components/preferences/dietary-restrictions.vue';
 import PreferredCuisines from '../components/preferences/preferred-cuisines.vue';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { capitalizeFirstLetter } from '../utils';
 
 const dietaryRestrictions = ref<string[]>([]);
@@ -22,6 +23,7 @@ const preferredSpices: PreferredSpice[] = [
 ]
 const preferredSpice = ref<string>('mild')
 
+const router = useRouter()
 const savePreferences = () => {
   const food_preferences = {
     dietary_restrictions: dietaryRestrictions.value,
@@ -30,6 +32,7 @@ const savePreferences = () => {
     spice_level: preferredSpice.value
   }
   console.table(food_preferences)
+  router.push('/ingredients')
 }
 </script>
 

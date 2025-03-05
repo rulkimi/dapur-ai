@@ -19,9 +19,9 @@ const buttonVariant = {
 };
 
 const buttonSize = {
-  'md': 'px-3 py-1',
-  'lg': 'px-4 py-2',
-  'sm': 'px-2 py-1'
+  'md': 'px-3 py-1 h-[36px]',
+  'lg': 'px-4 py-2 h-[46px]',
+  'sm': 'px-2 py-1 h-[32px]'
 }
 
 const buttonWidth = {
@@ -32,7 +32,7 @@ const buttonWidth = {
 
 <template>
   <button
-    class="flex h-[36px] items-center gap-2 rounded-lg transition-all duration-300"
+    class="flex items-center gap-2 rounded-lg transition-all duration-300"
     :class="[
       buttonSize[size],
       buttonVariant[variant],
