@@ -4,6 +4,8 @@ import WhyDapurai from '../components/home/why-dapurai.vue';
 </script>
 
 <template>
-  <HeroSection />
-  <WhyDapurai />
+  <div>
+    <HeroSection />
+    <WhyDapurai />
+  </div>
 </template>
