@@ -3,6 +3,11 @@ import Button from '../button.vue'
 import { useRouter } from 'vue-router';
 
 const router = useRouter()
+const goToSearchPage = () => {
+  const isAuthenticated = localStorage.getItem('authenticated')
+  if (isAuthenticated) router.push('/recipes')
+  else router.push('/auth')
+}
 </script>
 
 <template>
@@ -19,6 +24,7 @@ const router = useRouter()
           class="shadow-lg hover:shadow-sm"
           size="lg"
           icon="magnifying-glass"
+          @click="goToSearchPage"
         >
           Cari Resipi
         </Button>

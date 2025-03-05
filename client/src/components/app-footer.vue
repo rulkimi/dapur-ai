@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import Button from './button.vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
+const goToSearchPage = () => {
+  const isAuthenticated = localStorage.getItem('authenticated')
+  if (isAuthenticated) router.push('/recipes')
+  else router.push('/auth')
+}
 </script>
 
 <template>
@@ -11,6 +19,6 @@ import Button from './button.vue';
         Sertai komuniti kami dan temui ratusan resipi yang disesuaikan dengan bahan yang tersedia.
       </span>
     </div>
-    <Button size="lg" icon="magnifying-glass">Cari Resipi</Button>
+    <Button size="lg" icon="magnifying-glass" @click="goToSearchPage">Cari Resipi</Button>
   </footer>
 </template>
