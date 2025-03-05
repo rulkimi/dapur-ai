@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import Button from '../button.vue'
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter()
+const isAuthenticated = computed(() => localStorage.getItem('authenticated'))
+
 const goToSearchPage = () => {
-  const isAuthenticated = localStorage.getItem('authenticated')
-  if (isAuthenticated) router.push('/recipes')
+  if (isAuthenticated.value) router.push('/recipes')
   else router.push('/auth')
 }
 </script>
@@ -29,6 +31,14 @@ const goToSearchPage = () => {
           Cari Resipi
         </Button>
         <Button
+          v-if="isAuthenticated"
+          variant="primary-outline"
+          size="lg"
+        >
+          Kongsi ke Rakan
+        </Button>
+        <Button
+          v-else
           variant="primary-outline"
           size="lg"
           @click="router.push('/recipes')"
