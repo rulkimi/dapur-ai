@@ -59,7 +59,13 @@ const logIn = () => {
       </div>
     </form>
     <p class="block text-slate-500 text-center">
-      Tiada akaun? <a href="" class="text-teal-500 hover:underline">Daftar sekarang</a>
+      Tiada akaun?
+      <span
+        class="text-teal-500 cursor-pointer hover:underline"
+        @click="router.push('/signup')"
+      >
+        Daftar sekarang
+      </span>
     </p>
   </div>
 </template>
