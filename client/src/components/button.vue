@@ -1,16 +1,20 @@
 <script setup lang="ts">
+import type { ButtonHTMLAttributes } from 'vue';
+
 interface ButtonProps {
   variant?: 'primary' | 'primary-outline';
   size?: 'md' | 'lg' | 'sm';
   icon?: string
   iconPosition?: 'start' | 'end'
   width?: 'fit' | 'full'
+  type?: ButtonHTMLAttributes['type']
 }
 
 withDefaults(defineProps<ButtonProps>(), {
   variant: 'primary',
   size: 'md',
-  width: 'fit'
+  width: 'fit',
+  type: 'button'
 })
 
 const buttonVariant = {
@@ -38,6 +42,7 @@ const buttonWidth = {
       buttonVariant[variant],
       buttonWidth[width]
     ]"
+    :type="type"
   >
     <font-awesome-icon v-if="icon" :icon="['fas', icon]" />
     <slot v-else name="icon"></slot>
