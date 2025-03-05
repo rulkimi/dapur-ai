@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { ButtonHTMLAttributes } from 'vue';
+import { type ButtonHTMLAttributes, ref } from 'vue';
 
 interface ButtonProps {
   variant?: 'primary' | 'primary-outline';
   size?: 'md' | 'lg' | 'sm';
   icon?: string
+  hoverIcon?: string
   iconPosition?: 'start' | 'end'
   width?: 'fit' | 'full'
   type?: ButtonHTMLAttributes['type']
@@ -40,6 +41,20 @@ const buttonWidth = {
   'fit' : 'w-fit',
   'full' : 'w-full justify-center'
 }
+
+const isHovered = ref<boolean>(false)
+const hoverTimeout = ref< number | null >(null)
+
+const handleMouseOver = () => {
+  isHovered.value = true
+}
+
+const handleMouseOut = () => {
+  if (hoverTimeout.value) clearTimeout(hoverTimeout.value)
+  hoverTimeout.value = window.setTimeout(() => {
+    isHovered.value = false
+  }, 300)
+}
 </script>
 
 <template>
@@ -53,9 +68,29 @@ const buttonWidth = {
     ]"
     :type="type"
     :disabled="disabled"
+    @mouseenter="handleMouseOver"
+    @mouseleave="handleMouseOut"
   >
-    <font-awesome-icon v-if="icon" :icon="['fas', icon]" />
+    <Transition v-if="icon" name="icon" mode="out-in">
+      <font-awesome-icon v-if="isHovered && hoverIcon" :icon="['fas', hoverIcon]" :key="hoverIcon" />
+      <font-awesome-icon v-else :icon="['fas', icon]" :key="icon" />
+    </Transition>
     <slot v-else name="icon"></slot>
     <slot></slot>
   </button>
 </template>
+
+<style scoped>
+.icon-enter-active  {
+  transition: transform 0.1s;
+}
+.icon-leave-active {
+  transition: transform 0.05s;
+}
+.icon-enter-from {
+  transform: scale(0.5);
+}
+.icon-leave-to {
+  transform: scale(0.5);
+}
+</style>

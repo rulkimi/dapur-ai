@@ -21,6 +21,7 @@ import {
   faTimes,
   faCarrot,
   faWrench,
+  faBook,
   faBookOpen,
   faArrowLeft,
 } from '@fortawesome/free-solid-svg-icons'
@@ -42,6 +43,7 @@ library.add(
   faTimes,
   faCarrot,
   faWrench,
+  faBook,
   faBookOpen,
   faArrowLeft,
 )

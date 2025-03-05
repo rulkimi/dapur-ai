@@ -42,7 +42,8 @@ defineProps<{
         </ul>
       </div>
       <Button
-        icon="book-open"
+        icon="book"
+        hover-icon="book-open"
         width="full"
       >
         View Recipe
