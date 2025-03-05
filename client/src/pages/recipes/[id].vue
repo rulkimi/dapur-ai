@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import HeadingTitle from '../../components/heading-title.vue';
+import Button from '../../components/button.vue';
 
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import RecipeCard from '../../components/recipes/recipe-card.vue';
 
 const route = useRoute();
+const router = useRouter();
 const recipeId = route.params.id;
 
 interface Recipe {
@@ -92,5 +94,14 @@ recipes.value = recipeList;
         <RecipeCard :recipe="recipe" />
       </li>
     </ul>
+    <Button
+      variant="primary-outline"
+      icon="arrow-left"
+      class="mx-auto"
+      size="lg"
+      @click="router.push('/recipes')"
+    >
+      Tukar Bahan
+    </Button>
   </div>
 </template>
