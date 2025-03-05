@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from typing import Any, Annotated
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import get_current_auth
+from core.dependencies import controllable_endpoint, ControllableAPIRouter
 from domains.auth.models import Auth
 from domains.profiles.schemas import ProfileResponse, ProfileCreate, ProfileUpdate
 from domains.profiles.services import ProfileService
 from domains.profiles.repositories import ProfileRepository
 from db.repository import get_repository_session
 
-router = APIRouter(prefix="/profiles", tags=["profiles"])
+router = ControllableAPIRouter(prefix="/profiles", tags=["profiles"])
 
 
 def get_profile_service(
@@ -29,8 +30,14 @@ def get_profile_service(
     return ProfileService(repository)
 
 
-@router.get("/me", response_model=ProfileResponse)
+# Method 1: Using the controllable_endpoint decorator
+@router.get(
+    "/me", 
+    response_model=ProfileResponse
+)
+@controllable_endpoint(description="Get current user's profile", path="/api/v1/profiles/me:GET", enabled=True)
 async def get_my_profile(
+    request: Request,
     profile_service: Annotated[ProfileService, Depends(get_profile_service)],
     current_user: Auth = Depends(get_current_auth)
 ) -> Any:
@@ -53,9 +60,12 @@ async def get_my_profile(
     return profile
 
 
+# Method 2: Using the controllable_endpoint decorator
 @router.put("/me", response_model=ProfileResponse)
+@controllable_endpoint(description="Update current user's profile")
 async def update_my_profile(
     profile_update: ProfileUpdate,
+    request: Request,
     profile_service: Annotated[ProfileService, Depends(get_profile_service)],
     current_user: Auth = Depends(get_current_auth)
 ) -> Any:
@@ -85,9 +95,19 @@ async def update_my_profile(
     return profile
 
 
-@router.get("/{user_id}", response_model=ProfileResponse)
+# Method 3: Using the controllable_endpoint decorator only
+@router.get(
+    "/{user_id}", 
+    response_model=ProfileResponse
+)
+@controllable_endpoint(
+    path="/api/v1/profiles/{user_id}",  # Use wildcard path for better registry control
+    enabled=True,
+    description="Get a profile by user ID (admin only)"
+)
 async def get_profile_by_id(
     user_id: int,
+    request: Request,
     profile_service: Annotated[ProfileService, Depends(get_profile_service)],
     current_user: Auth = Depends(get_current_auth)
 ) -> Any:

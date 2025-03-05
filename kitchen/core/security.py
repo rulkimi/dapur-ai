@@ -14,6 +14,8 @@ from core.exceptions import (
     ForbiddenException, 
     ServiceException
 )
+from jose.exceptions import ExpiredSignatureError, JWTClaimsError
+from core.exceptions.http import TokenException
 
 if TYPE_CHECKING:
     # Import for type checking only
@@ -43,15 +45,20 @@ oauth2_scheme = OAuth2PasswordBearer(
 async def get_current_auth(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: AsyncSession = Depends(get_repository_session)
-):
+) -> Union[Auth, Anonymous]:
     """
-    Get current authenticated user from JWT token
-    """
-    credentials_exception = UnauthorizedException(
-        message="Could not validate credentials",
-        details={"authenticate": "Bearer"}
-    )
+    Get the current authenticated user from a token.
     
+    Args:
+        token: JWT token from the request header
+        session: Database session
+        
+    Returns:
+        Auth object if authenticated, Anonymous object if no token provided
+        
+    Raises:
+        UnauthorizedException: If token is invalid or expired
+    """
     # Handle case where token is None (unauthenticated request)
     if token is None:
         return Anonymous()
@@ -64,7 +71,11 @@ async def get_current_auth(
         )
         auth_id: str = payload.get("sub")
         if auth_id is None:
-            raise credentials_exception
+            raise TokenException(
+                message="Invalid token payload",
+                details={"error": "Missing subject identifier"},
+                error_type="invalid_payload"
+            )
             
         # Check if user data is in token
         user_data = payload.get("user")
@@ -85,8 +96,27 @@ async def get_current_auth(
                 auth.is_verified = user_data.get("is_verified")
                 
             return auth
+    except ExpiredSignatureError:
+        # Specific handling for expired tokens
+        raise TokenException(
+            message="Authentication token has expired",
+            details={
+                "resolution": "Please log in again to obtain a new token"
+            },
+            error_type="token_expired"
+        )
+    except JWTClaimsError:
+        # Handling for invalid claims (like wrong audience)
+        raise TokenException(
+            message="Invalid token claims",
+            error_type="invalid_claims"
+        )
     except JWTError:
-        raise credentials_exception
+        # Catch-all for other JWT errors
+        raise TokenException(
+            message="Invalid authentication token",
+            error_type="invalid_token"
+        )
         
     # Import here to avoid circular import
     from domains.auth.repositories import AuthRepository
@@ -94,7 +124,22 @@ async def get_current_auth(
     auth = await repository.get_auth_by_id(int(auth_id))
     
     if auth is None:
-        raise credentials_exception
+        raise UnauthorizedException(
+            message="User not found or inactive",
+            details={
+                "error_type": "user_not_found",
+                "authenticate": "Bearer"
+            }
+        )
+        
+    if not auth.is_active:
+        raise UnauthorizedException(
+            message="User account is inactive",
+            details={
+                "error_type": "inactive_user",
+                "authenticate": "Bearer"
+            }
+        )
         
     return auth
 

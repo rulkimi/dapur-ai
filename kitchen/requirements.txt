@@ -10,6 +10,9 @@ python-multipart
 alembic
 pytest
 pytest-asyncio
-httpx
+httpx>=0.24.0
 python-dotenv
 email-validator
+psycopg[binary,pool]>=3.0.0
+# LLM integration dependencies
+pydantic-ai>=0.0.32

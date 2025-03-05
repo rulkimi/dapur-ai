@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 
 
 class ProfileBase(BaseModel):
@@ -24,6 +24,4 @@ class ProfileResponse(ProfileBase):
     """Schema for profile response"""
     id: int
     
-    class Config:
-        from_attributes = True  # For Pydantic v2 compatibility
-        from_attributes = True  # For backwards compatibility with Pydantic v1 
+    model_config = ConfigDict(from_attributes=True)  # For Pydantic v2 compatibility

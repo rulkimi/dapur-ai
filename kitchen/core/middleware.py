@@ -1,5 +1,5 @@
 import uuid
-from fastapi import Request
+from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from .context import set_request_id, reset_request_id, get_request_id
 import logging
@@ -13,6 +13,9 @@ from db.models.request_log import RequestLog
 from starlette.datastructures import FormData
 import json
 from .config import settings
+from starlette.responses import JSONResponse, Response
+import re
+from .dependencies import ENDPOINT_REGISTRY, is_endpoint_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -207,3 +210,163 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
                 return True
                 
         return False 
+
+class FeatureFlagMiddleware(BaseHTTPMiddleware):
+    """Middleware that checks feature flags for routes and returns 404 if disabled."""
+    
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        # Get the path of the request
+        path = request.url.path
+        method = request.method
+        
+        # Add enhanced logging for debugging
+        logger.info(f"FeatureFlagMiddleware processing request: {method} {path}")
+        
+        # Check if there are any path-specific feature flags
+        disabled = self._check_path_against_feature_flags(path)
+        
+        if disabled:
+            logger.info(f"Path {path} - Disabled by feature flag")
+        else:
+            logger.debug(f"Path {path} - Feature flag check: enabled")
+        
+        # Now also check the dynamic endpoint registry
+        logger.debug(f"ENDPOINT_REGISTRY entries: {len(ENDPOINT_REGISTRY)}")
+        
+        # Check for path with method suffix
+        path_with_method = f"{path}:{method}"
+        if path_with_method in ENDPOINT_REGISTRY:
+            logger.debug(f"Found exact match for {path_with_method} in registry: enabled={ENDPOINT_REGISTRY[path_with_method]['enabled']}")
+            if not ENDPOINT_REGISTRY[path_with_method]['enabled']:
+                disabled = True
+                logger.info(f"Path {path_with_method} - Disabled by exact match in endpoint registry")
+        
+        # Also check for path without method suffix (legacy)
+        elif path in ENDPOINT_REGISTRY:
+            logger.debug(f"Found exact match for {path} in registry: enabled={ENDPOINT_REGISTRY[path]['enabled']}")
+            if not ENDPOINT_REGISTRY[path]['enabled']:
+                disabled = True
+                logger.info(f"Path {path} - Disabled by exact match in endpoint registry")
+            
+        # Also check if the path matches any registered endpoint patterns (regex)
+        if not disabled:
+            for registered_path, info in ENDPOINT_REGISTRY.items():
+                # Strip method suffix for comparison if present
+                base_registered_path = registered_path.split(':', 1)[0] if ':' in registered_path else registered_path
+                
+                # Check if the registered path is a regex pattern and matches the current path
+                if base_registered_path.startswith("^") and re.match(base_registered_path, path) and not info["enabled"]:
+                    disabled = True
+                    logger.info(f"Path {path} - Disabled by pattern match: {base_registered_path}")
+                    break
+                
+                # Special case for wildcard paths (non-regex)
+                if "{" in base_registered_path and "}" in base_registered_path:
+                    # Convert wildcard path to regex pattern
+                    pattern = base_registered_path.replace("{", "(?P<").replace("}", ">[^/]+)")
+                    if re.match(pattern, path) and not info["enabled"]:
+                        disabled = True
+                        logger.info(f"Path {path} - Disabled by wildcard pattern match: {base_registered_path}")
+                        break
+        
+        # If the path is disabled, return a 404 Response
+        if disabled:
+            logger.info(f"Path {path} - Access rejected by feature flag middleware")
+            return JSONResponse(
+                status_code=404,
+                content={"detail": "Not Found"}
+            )
+        
+        # Otherwise, proceed with the request
+        return await call_next(request)
+    
+    def _check_path_against_feature_flags(self, path: str) -> bool:
+        """
+        Check if a path should be disabled based on feature flags.
+        
+        Args:
+            path: The request path to check
+            
+        Returns:
+            bool: True if the path should be disabled, False otherwise
+        """
+        # First check if there are direct path mappings in the settings
+        path_flags = settings.PATH_FEATURE_FLAGS or {}
+        
+        # Check for exact path match
+        if path in path_flags:
+            flag_name = path_flags[path]
+            if not settings.get_feature_flag(flag_name, True):
+                logger.info(f"Path {path} disabled by exact path match - flag: {flag_name}")
+                return True
+        
+        # Check for path prefix matches
+        for prefix, flag_name in settings.PATH_PREFIX_FEATURE_FLAGS.items():
+            if path.startswith(prefix):
+                if not settings.get_feature_flag(flag_name, True):
+                    logger.info(f"Path {path} disabled by prefix match: {prefix} - flag: {flag_name}")
+                    return True
+                    
+        return False
+
+    @staticmethod
+    def modify_openapi(app: "FastAPI") -> None:
+        """
+        Modify the OpenAPI generation to hide disabled endpoints.
+        
+        This method should be called during application startup.
+        
+        Args:
+            app: The FastAPI application instance
+        """
+        original_openapi = app.openapi
+        
+        def filtered_openapi() -> dict:
+            """Custom OpenAPI schema generator that filters out disabled endpoints."""
+            if app.openapi_schema:
+                # Return cached schema if we have it
+                return app.openapi_schema
+                
+            # Generate the standard schema
+            openapi_schema = original_openapi()
+            
+            # Create a new paths dictionary excluding disabled endpoints
+            paths = openapi_schema.get("paths", {})
+            filtered_paths = {}
+            
+            # Include only enabled paths
+            for path, path_item in paths.items():
+                # API paths might not include the API prefix, so check with and without
+                full_path = f"{settings.API_V1_STR}{path}" if not path.startswith("/api") else path
+                
+                # Check each HTTP method for this path
+                methods_enabled = {}
+                for method in path_item.keys():
+                    if method.upper() in ["GET", "POST", "PUT", "DELETE", "PATCH"]:
+                        # Check path with method suffix
+                        path_with_method = f"{full_path}:{method.upper()}"
+                        if path_with_method in ENDPOINT_REGISTRY:
+                            methods_enabled[method] = ENDPOINT_REGISTRY[path_with_method]["enabled"]
+                        else:
+                            # Fall back to checking the path without method suffix
+                            methods_enabled[method] = is_endpoint_enabled(full_path)
+                
+                # If any method is enabled, include the path with only the enabled methods
+                if any(methods_enabled.values()):
+                    filtered_path_item = {}
+                    for method, enabled in methods_enabled.items():
+                        if enabled:
+                            filtered_path_item[method] = path_item[method]
+                    
+                    if filtered_path_item:
+                        filtered_paths[path] = filtered_path_item
+            
+            # Replace the paths in the schema
+            openapi_schema["paths"] = filtered_paths
+            
+            # Cache and return the filtered schema
+            app.openapi_schema = openapi_schema
+            return app.openapi_schema
+        
+        # Replace the original openapi method with our filtered version
+        app.openapi = filtered_openapi
