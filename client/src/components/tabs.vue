@@ -28,7 +28,10 @@ const setActiveTab = (tabTitle: string) => {
       </li>
     </ul>
   </div>
-  <div v-if="modelValue" class="border border-gray-200 rounded-lg p-4">
+  <div
+    v-if="modelValue"
+    class="border border-gray-200 rounded-lg p-4"
+  >
     <slot :name="modelValue"></slot>
   </div>
 </template>

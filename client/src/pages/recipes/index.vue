@@ -45,8 +45,8 @@ const removeIngredient = (index: number) => {
 
 const router = useRouter()
 const searchRecipe = () => {
-  const recipeId = Math.random().toString(36).substring(2, 15);
-  router.push(`/recipes/${recipeId}`)
+  const searchId = Math.random().toString(36).substring(2, 15);
+  router.push(`/recipes/${searchId}`)
 }
 </script>
 
