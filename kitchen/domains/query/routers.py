@@ -25,7 +25,6 @@ router = ControllableAPIRouter(prefix="/queries", tags=["queries"])
 # Session endpoints
 @router.post("/sessions", response_model=QuerySessionOut)
 @controllable_endpoint(
-    path="/api/v1/queries/sessions:POST",
     enabled=True,
     description="Create a new query session"
 )
@@ -38,14 +37,14 @@ async def create_session(
     """
     Create a new query session.
     
-    - **title**: Optional title for the session
+    A query session groups related queries together and maintains conversation state for chat-based LLM interactions.
+    
+    - **name**: Optional name for the session
     """
-    user_id = current_auth.id if current_auth else None
-    return await service.create_session(session_data, user_id)
+    return await service.create_session(session_data)
 
 @router.get("/sessions/{session_id}", response_model=QuerySessionWithQueries)
 @controllable_endpoint(
-    path="/api/v1/queries/sessions/{session_id}:GET",
     enabled=True,
     description="Get a query session by ID"
 )
@@ -56,28 +55,17 @@ async def get_session(
     current_auth: Annotated[Optional[Auth], Depends(get_optional_current_active_user)] = None
 ) -> QuerySessionWithQueries:
     """
-    Get a session by its ID.
+    Get a query session by ID with all associated queries.
     
     - **session_id**: The unique identifier of the session
     """
-    session = await service.get_session(session_id)
-    queries = await service.get_queries(session_id=session_id)
-    
-    # Construct response with session and its queries
-    session_dict = {
-        "session_id": session.session_id,
-        "title": session.title,
-        "is_active": session.is_active,
-        "created_at": session.created_at,
-        "updated_at": session.updated_at,
-        "queries": queries
-    }
-    
-    return QuerySessionWithQueries(**session_dict)
+    try:
+        return await service.get_session_with_queries(session_id)
+    except InvalidSessionIdException:
+        raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
 
 @router.get("/sessions", response_model=List[QuerySessionOut])
 @controllable_endpoint(
-    path="/api/v1/queries/sessions:GET",
     enabled=True,
     description="Get a list of query sessions"
 )
@@ -91,15 +79,13 @@ async def get_sessions(
     """
     Get a list of query sessions.
     
-    - **limit**: Maximum number of sessions to return (1-1000)
+    - **limit**: Maximum number of sessions to return
     - **offset**: Number of sessions to skip
     """
-    user_id = current_auth.id if current_auth else None
-    return await service.get_sessions(user_id, limit, offset)
+    return await service.get_sessions(limit=limit, offset=offset)
 
 @router.patch("/sessions/{session_id}", response_model=QuerySessionOut)
 @controllable_endpoint(
-    path="/api/v1/queries/sessions/{session_id}:PATCH",
     enabled=True,
     description="Update a query session"
 )
@@ -114,13 +100,12 @@ async def update_session(
     Update a query session.
     
     - **session_id**: The unique identifier of the session
-    - **session_data**: The data to update
+    - **session_data**: The session data to update
     """
     return await service.update_session(session_id, session_data)
 
 @router.delete("/sessions/{session_id}")
 @controllable_endpoint(
-    path="/api/v1/queries/sessions/{session_id}:DELETE",
     enabled=True,
     description="Delete a query session"
 )
@@ -141,8 +126,7 @@ async def delete_session(
 # Query endpoints
 @router.post("/", response_model=QueryOut)
 @controllable_endpoint(
-    path="/api/v1/queries:POST",
-    enabled=False,
+    enabled=True,
     description="Create a new query (admin only)"
 )
 async def create_query(
@@ -161,12 +145,10 @@ async def create_query(
     - **model**: The specific model to use (e.g., "gemini-1.5-pro")
     - **temperature**: Controls randomness (0-1)
     """
-    result = await service.create_query(query_data.to_create_dto())
-    return result
+    return await service.create_query(query_data)
 
 @router.post("/chat", response_model=QueryOut)
-@controllable_endpoint(
-    path="/api/v1/queries/chat:POST",  # Add HTTP method to make path unique
+@controllable_endpoint( # Add HTTP method to make path unique
     enabled=False,
     description="Create a new chat query with message history (admin only)"
 )
@@ -193,7 +175,6 @@ async def create_chat_query(
 
 @router.post("/extract")
 @controllable_endpoint(
-    path="/api/v1/queries/extract:POST",  # Add HTTP method to make path unique
     enabled=False,
     description="Extract structured data from an LLM provider using a Pydantic schema (admin only)"
 )
@@ -243,7 +224,6 @@ async def extract_structured_data(
 
 @router.get("/{query_id}", response_model=QueryOut)
 @controllable_endpoint(
-    path="/api/v1/queries/{query_id}:GET",  # Add HTTP method to make path unique
     enabled=False,
     description="Get a query by its ID (admin only)"
 )
@@ -262,7 +242,6 @@ async def get_query(
 
 @router.get("/", response_model=List[QueryOut])
 @controllable_endpoint(
-    path="/api/v1/queries:GET",  # Add HTTP method to make path unique
     enabled=False,
     description="Get a list of queries (admin only)"
 )
@@ -286,7 +265,6 @@ async def get_queries(
 
 @router.patch("/{query_id}", response_model=QueryOut)
 @controllable_endpoint(
-    path="/api/v1/queries/{query_id}:PATCH",  # Add HTTP method to make path unique
     enabled=False,
     description="Update a query (admin only)"
 )
@@ -307,7 +285,6 @@ async def update_query(
 
 @router.delete("/{query_id}")
 @controllable_endpoint(
-    path="/api/v1/queries/{query_id}:DELETE",  # Add HTTP method to make path unique
     enabled=False,
     description="Delete a query (admin only)"
 )
@@ -324,4 +301,3 @@ async def delete_query(
     """
     result = await service.delete_query(query_id)
     return {"success": result}
-
