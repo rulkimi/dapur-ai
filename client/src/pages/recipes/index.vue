@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import FormInput from '../components/form-input.vue';
-import Button from '../components/button.vue';
+import FormInput from '../../components/form-input.vue';
+import Button from '../../components/button.vue';
+import HeadingTitle from '../../components/heading-title.vue';
 
 import { ref } from 'vue';
-import { capitalizeFirstLetter } from '../utils';
+import { useRouter } from 'vue-router';
+import { capitalizeFirstLetter } from '../../utils';
 
 const ingredient = ref<string>('')
 const ingredients = ref<string[]>([])
@@ -40,14 +42,20 @@ const addIngredient = (newIngredient: string) => {
 const removeIngredient = (index: number) => {
   ingredients.value = ingredients.value.filter((_, i) => i !== index);
 }
+
+const router = useRouter()
+const searchRecipe = () => {
+  const recipeId = Math.random().toString(36).substring(2, 15);
+  router.push(`/recipes/${recipeId}`)
+}
 </script>
 
 <template>
   <div class="space-y-6 max-w-3xl mx-auto">
-    <div class="text-center max-w-lg mx-auto space-y-1">
-      <h1 class="text-3xl font-semibold">Bahan apa yang anda ada?</h1>
-      <span class="block text-slate-500">Senaraikan bahan sedia ada dan kami akan cadangkan resipi yang boleh anda buat!</span>
-    </div>
+    <HeadingTitle 
+      title="Bahan apa yang anda ada?"
+      subtitle="Senaraikan bahan sedia ada dan kami akan cadangkan resipi yang boleh anda buat!"
+    />
     <div class="flex items-center gap-1">
       <FormInput
         id="ingredient"
@@ -62,6 +70,7 @@ const removeIngredient = (index: number) => {
         icon="plus"
         size="lg"
         @click="addIngredient(ingredient)"
+        :disabled="!ingredient"
       >
         Tambah
       </Button>
@@ -103,6 +112,8 @@ const removeIngredient = (index: number) => {
       class="mx-auto"
       icon="magnifying-glass"
       size="lg"
+      @click="searchRecipe"
+      :disabled="!ingredients.length"
     >
       Cari Resipi
     </Button>

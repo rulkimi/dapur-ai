@@ -8,18 +8,26 @@ interface ButtonProps {
   iconPosition?: 'start' | 'end'
   width?: 'fit' | 'full'
   type?: ButtonHTMLAttributes['type']
+  disabled?: boolean
 }
 
 withDefaults(defineProps<ButtonProps>(), {
   variant: 'primary',
   size: 'md',
   width: 'fit',
-  type: 'button'
+  type: 'button',
+  disabled: false
 })
 
 const buttonVariant = {
-  'primary': 'text-white bg-gradient-to-t to-teal-400 via-teal-500 from-teal-600 bg-size-200 bg-pos-0 hover:bg-pos-100',
-  'primary-outline': 'border border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white'
+  'primary': {
+    default: 'text-white bg-gradient-to-t to-teal-400 via-teal-500 from-teal-600 bg-size-200 bg-pos-0',
+    hover: 'hover:bg-pos-100'
+  } ,
+  'primary-outline': {
+    default: 'border border-teal-500 text-teal-500',
+    hover: 'hover:bg-teal-500 hover:text-white'
+  }
 };
 
 const buttonSize = {
@@ -39,10 +47,12 @@ const buttonWidth = {
     class="flex items-center gap-2 rounded-lg transition-all duration-300"
     :class="[
       buttonSize[size],
-      buttonVariant[variant],
-      buttonWidth[width]
+      buttonVariant[variant].default,
+      buttonWidth[width],
+      disabled ? 'opacity-50 cursor-not-allowed' : buttonVariant[variant].hover
     ]"
     :type="type"
+    :disabled="disabled"
   >
     <font-awesome-icon v-if="icon" :icon="['fas', icon]" />
     <slot v-else name="icon"></slot>

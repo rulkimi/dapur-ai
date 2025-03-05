@@ -25,7 +25,7 @@ const router = useRouter()
         <Button
           variant="primary-outline"
           size="lg"
-          @click="router.push('/ingredients')"
+          @click="router.push('/recipes')"
         >
           Cuba Tanpa Log Masuk
         </Button>

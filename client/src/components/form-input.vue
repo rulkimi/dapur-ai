@@ -45,7 +45,7 @@ const handleInput = (event: Event) => {
       >
       <font-awesome-icon
         v-if="icon"
-        class="absolute left-2 top-2.5 text-slate-500 peer-focus:text-teal-500"
+        class="absolute left-2.5 top-2.5 text-slate-500 peer-focus:text-teal-500"
         :icon="['fas', icon]"
       />
     </div>
