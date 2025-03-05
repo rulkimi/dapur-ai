@@ -6,7 +6,7 @@ const router = useRouter()
 </script>
 
 <template>
-  <header class="sticky bg-white backdrop-filter backdrop-blur-sm bg-opacity-80 top-0 border-b">
+  <header class="sticky top-0 z-[10] bg-white backdrop-filter backdrop-blur-sm bg-opacity-80 border-b">
     <div class="max-w-7xl mx-auto py-3 px-6 flex items-center justify-between">
       <div
         class="text-teal-500 text-xl font-semibold flex items-center gap-2 cursor-pointer group"
