@@ -16,7 +16,7 @@ const logIn = () => {
 </script>
 
 <template>
-  <div class="custom-card max-w-md mx-auto space-y-5">
+  <div class="custom-card bg-white max-w-md mx-auto space-y-5">
     <font-awesome-icon class="text-teal-500 text-6xl mx-auto block" :icon="['fas', 'kitchen-set']" />
     <div class="text-center mx-auto space-y-2">
       <span class="block text-3xl font-semibold">DapurAI</span>
