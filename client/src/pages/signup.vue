@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import Button from '../components/button.vue';
 import Stepper, { type Step } from '../components/stepper.vue';
 import FoodPreferences from '../components/signup/food-preferences.vue';
+import AccountInformation from '../components/signup/account-information.vue';
 
 const steps: Step[] = [
   { title: 'Maklumat Akaun' },
@@ -18,16 +19,20 @@ const handleNextStep = () => {
   if (currentStep.value === steps.length) return;
   currentStep.value++
 }
+const handleStepChange = (step: number) => {
+  currentStep.value = step;
+}
 </script>
 
 <template>
   <Stepper
     :current-step="currentStep"
     :steps="steps"
+    @update:currentStep="handleStepChange"
   >
     <template #content="{ step }">
       <div v-if="step.title === 'Maklumat Akaun'">
-        asdasd
+        <AccountInformation />
       </div>
       <div v-else-if="step.title === 'Citarasa Makanan'">
         <FoodPreferences>

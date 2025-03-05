@@ -29,7 +29,7 @@ const handleInput = (event: Event) => {
 
 <template>
   <div class="space-y-1">
-    <label :for="id" class="text-slate-500">{{ label }}</label>
+    <label :for="id" class="text-slate-500 text-sm">{{ label }}</label>
     <div class="relative">
       <input
         :id="id"
