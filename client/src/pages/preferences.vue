@@ -32,7 +32,7 @@ const savePreferences = () => {
     spice_level: preferredSpice.value
   }
   console.table(food_preferences)
-  router.push('/ingredients')
+  router.push('/recipes')
 }
 </script>
 
