@@ -155,4 +155,22 @@ class EventRamadan(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)  # For Pydantic v2 compatibility
 
+# New schemas for onboarding
+class FoodPreferences(BaseModel):
+    dietary_restrictions: Optional[List[str]] = None
+    allergies: Optional[List[str]] = None
+    preferred_cuisines: Optional[List[str]] = None
+    spice_level: Optional[str] = None
+
+class OnboardingRequest(BaseModel):
+    user_id: int
+    name: str
+    dob: Optional[str] = None
+    food_preferences: Optional[FoodPreferences] = None
+    additional_info: Optional[str] = None
+
+class OnboardingResponse(BaseModel):
+    user_id: int
+    system_prompt: str
+
 
