@@ -248,21 +248,60 @@ class ControllableAPIRouter(APIRouter):
         # Get the include_in_schema parameter
         include_in_schema = kwargs.get("include_in_schema", True)
         
+        # Extract the HTTP method from the kwargs - this is how FastAPI sets it
+        methods = kwargs.get("methods", {"GET"})
+        # Convert methods set to list or get the first item directly
+        http_method = next(iter(methods)) if methods else "GET"
+        
         # Check if endpoint has controllable attributes
-        if hasattr(endpoint, "__controllable__") and hasattr(endpoint, "__endpoint_path__"):
-            # If the endpoint is controllable, use its enabled status to determine include_in_schema
-            endpoint_path = endpoint.__endpoint_path__
-            if endpoint_path in ENDPOINT_REGISTRY:
-                include_in_schema = ENDPOINT_REGISTRY[endpoint_path]["enabled"]
-                # Update the kwargs with the new include_in_schema value
-                kwargs["include_in_schema"] = include_in_schema
+        is_controllable = hasattr(endpoint, "__controllable__")
+        if is_controllable:
+            endpoint_path = None
+            
+            # Check if endpoint has a predefined path
+            if hasattr(endpoint, "__endpoint_path__"):
+                endpoint_path = getattr(endpoint, "__endpoint_path__")
+            else:
+                # Construct the path with the API prefix, router prefix and HTTP method
+                router_prefix = self.prefix if hasattr(self, "prefix") else ""
+                derived_path = f"/api/v1{router_prefix}{path}:{http_method}"
+                endpoint_path = derived_path
+                
+                # Store the derived path on the endpoint
+                setattr(endpoint, "__endpoint_path__", endpoint_path)
+            
+            # Get enabled status and description
+            enabled = getattr(endpoint, "__enabled__", True)
+            description = getattr(endpoint, "__description__", "")
+            
+            # Register the endpoint in the registry
+            register_endpoint(endpoint_path, enabled, description)
+            
+            # Update include_in_schema based on endpoint enabled status
+            include_in_schema = enabled
+            kwargs["include_in_schema"] = include_in_schema
         
         # Call the parent add_api_route
         route = super().add_api_route(path, endpoint, **kwargs)
         
-        # Store the route on the endpoint for future reference
+        # Store the route and routing information on the endpoint for future reference
         setattr(endpoint, "__route_set__", route)
+        setattr(endpoint, "__http_method__", http_method)
+        setattr(endpoint, "__router_path__", path)
+        setattr(endpoint, "__router_prefix__", self.prefix if hasattr(self, "prefix") else "")
         
+        # If this is a wrapped function, also set attributes on the original function
+        if hasattr(endpoint, "__wrapped__"):
+            wrapped = getattr(endpoint, "__wrapped__")
+            setattr(wrapped, "__route_set__", route)
+            setattr(wrapped, "__http_method__", http_method)
+            setattr(wrapped, "__router_path__", path)
+            setattr(wrapped, "__router_prefix__", self.prefix if hasattr(self, "prefix") else "")
+            
+            # If controllable, also copy those attributes
+            if is_controllable and hasattr(endpoint, "__endpoint_path__"):
+                setattr(wrapped, "__endpoint_path__", getattr(endpoint, "__endpoint_path__"))
+                
         return route
 
 # Patch the decorator to explicitly clear any route information when applied
@@ -279,8 +318,8 @@ def controllable_endpoint(
     OpenAPI documentation and will return a 404 when accessed.
     
     Args:
-        path: Optional override for the endpoint path (by default will use the router path)
-            Adding HTTP method as suffix (e.g. "/api/path:GET") is recommended for method distinction
+        path: Optional override for the endpoint path (if not provided, will be automatically 
+            derived from the router path and HTTP method)
         enabled: Initial enabled status
         description: Description of the endpoint
         
@@ -288,8 +327,8 @@ def controllable_endpoint(
         The original endpoint function or a function that returns 404 if disabled
         
     Example:
-        @router.get("/users/{user_id}", include_in_schema=get_include_in_schema("/api/v1/users/{user_id}:GET"))
-        @controllable_endpoint(path="/api/v1/users/{user_id}:GET", description="Get user by ID")
+        @router.get("/users/{user_id}")
+        @controllable_endpoint(description="Get user by ID")  # Path will be auto-derived
         async def get_user(user_id: int, request: Request):
             return {"user_id": user_id}
     """
@@ -297,7 +336,7 @@ def controllable_endpoint(
         # Get the endpoint path from the function
         endpoint_path = path
         
-        # Register the endpoint with initial settings if path is known
+        # Store it for later if it was provided manually
         if endpoint_path:
             # Ensure the path has a method suffix if not already present
             if ":" not in endpoint_path:
@@ -335,32 +374,52 @@ def controllable_endpoint(
                 # Get the HTTP method
                 http_method = request.scope["method"]
                 
-                # Use the actual path if no custom path was provided
-                check_path = endpoint_path or actual_path
+                # Use the stored path if available, otherwise derive from the request
+                check_path = None
+                if endpoint_path:
+                    check_path = endpoint_path
+                elif hasattr(wrapper, "__endpoint_path__"):
+                    # Try to get the path from the wrapper if it was set during route registration
+                    check_path = getattr(wrapper, "__endpoint_path__")
+                else:
+                    # Derive the path from the request
+                    router_prefix = ""
+                    # Extract router prefix from the path if possible
+                    for prefix in ["/queries", "/auth", "/admin", "/profiles"]:  # Add common prefixes
+                        if actual_path.startswith(prefix):
+                            router_prefix = prefix
+                            break
+                    
+                    # Construct the path with prefix
+                    api_path = f"/api/v1{actual_path}:{http_method}"
+                    check_path = api_path
                 
                 # If the check_path doesn't include the method and doesn't end with a method suffix
                 # append the method for better distinction between endpoints at the same URL
-                if ":" not in check_path:
+                if check_path and ":" not in check_path:
                     check_path = f"{check_path}:{http_method}"
                 
                 # Register the endpoint if not already registered
-                if check_path not in ENDPOINT_REGISTRY:
+                if check_path and check_path not in ENDPOINT_REGISTRY:
                     register_endpoint(check_path, enabled, description)
                     
                 # Check if the endpoint is enabled
-                if not is_endpoint_enabled(check_path):
+                if check_path and not is_endpoint_enabled(check_path):
+                    # Return 404 if the endpoint is disabled
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail="Endpoint not found"
                     )
             
-            # Call the original function
+            # If enabled or no request available (can't check), call the original function
             return await func(*args, **kwargs)
         
-        # Set flags on the function for use in schema generation
-        wrapper.__controllable__ = True
-        wrapper.__endpoint_path__ = endpoint_path
-        wrapper.__enabled__ = enabled
+        # Store the controllable attributes on the wrapper function
+        setattr(wrapper, "__controllable__", True)
+        setattr(wrapper, "__enabled__", enabled)
+        setattr(wrapper, "__description__", description)
+        if endpoint_path:
+            setattr(wrapper, "__endpoint_path__", endpoint_path)
         
         return wrapper
     
