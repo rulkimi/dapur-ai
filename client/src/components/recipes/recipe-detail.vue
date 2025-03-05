@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Button from '../button.vue';
+import Tabs from '../tabs.vue';
 
 import { ref } from 'vue';
 import { type RecipeDetail } from '../../pages/recipes/[id].vue';
@@ -10,6 +11,13 @@ defineProps<{
 
 const emit = defineEmits(['close'])
 const servings = ref<number>(2)
+
+const tabItems = [
+  { title: 'ingredients' },
+  { title: 'instructions' },
+  { title: 'nutrition' },
+]
+const activeTab = ref<string>('ingredients')
 </script>
 
 <template>
@@ -57,5 +65,16 @@ const servings = ref<number>(2)
         {{ tag }}
       </li>
     </ul>
+    <Tabs v-model="activeTab" :tabs="tabItems">
+      <template #ingredients>
+        ingredients
+      </template>
+      <template #instructions>
+        instructions
+      </template>
+      <template #nutrition>
+        nutrition
+      </template>
+    </Tabs>
   </div>
 </template>
