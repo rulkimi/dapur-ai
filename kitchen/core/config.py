@@ -1,9 +1,121 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict, Callable
 from pydantic import PostgresDsn, field_validator, SecretStr, AnyHttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 import re
 from urllib.parse import urlparse
+import logging
+from functools import lru_cache
+
+logger = logging.getLogger(__name__)
+
+# Function to discover all domain names - now just a utility function
+def discover_domains() -> list[str]:
+    """
+    Discover all domain names in the domains directory.
+    
+    Returns:
+        List of domain names
+    """
+    domains = []
+    domains_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "domains")
+    
+    # Check if domains directory exists
+    if not os.path.isdir(domains_dir):
+        return domains
+        
+    # List all domain directories
+    for domain_name in os.listdir(domains_dir):
+        domain_path = os.path.join(domains_dir, domain_name)
+        
+        # Skip if not a directory
+        if not os.path.isdir(domain_path):
+            continue
+            
+        # Skip if domain has no routers.py file
+        router_path = os.path.join(domain_path, "routers.py")
+        if not os.path.isfile(router_path):
+            continue
+            
+        domains.append(domain_name)
+    
+    return domains
+
+# Dynamic settings provider class
+class DynamicSettings:
+    """
+    Dynamic settings provider that discovers domains on demand.
+    
+    This allows us to avoid static configuration in settings for domains.
+    """
+    
+    def __init__(self):
+        """Initialize with empty caches."""
+        self._domains = None
+        self._feature_flags = None
+        self._path_prefix_feature_flags = None
+    
+    def clear_cache(self):
+        """Clear all cached values to force rediscovery."""
+        self._domains = None
+        self._feature_flags = None
+        self._path_prefix_feature_flags = None
+    
+    @property
+    def domains(self) -> list[str]:
+        """Discover domains on first access and cache the result."""
+        if self._domains is None:
+            self._domains = discover_domains()
+            logger.info(f"Discovered domains: {self._domains}")
+        return self._domains
+    
+    @property
+    def feature_flags(self) -> Dict[str, bool]:
+        """Generate feature flags for all domains on first access."""
+        if self._feature_flags is None:
+            # Generate domain-specific feature flags
+            domain_flags = {
+                f"enable_{domain}_endpoints": True 
+                for domain in self.domains
+            }
+            
+            # Add any hardcoded feature flags
+            extra_flags = {
+                # Add any additional feature flags here that aren't domain-specific
+            }
+            
+            self._feature_flags = {**domain_flags, **extra_flags}
+            logger.info(f"Generated feature flags for domains: {list(domain_flags.keys())}")
+        
+        return self._feature_flags
+    
+    @property
+    def path_prefix_feature_flags(self) -> Dict[str, str]:
+        """Generate path prefix mappings for all domains on first access."""
+        if self._path_prefix_feature_flags is None:
+            self._path_prefix_feature_flags = {
+                f"/api/v1/{domain}/": f"enable_{domain}_endpoints"
+                for domain in self.domains
+            }
+            logger.info(f"Generated path prefix mappings for domains: {list(self._path_prefix_feature_flags.keys())}")
+        
+        return self._path_prefix_feature_flags
+    
+    def get_feature_flag(self, flag_name: str, default: bool = True) -> bool:
+        """Get a feature flag value with fallback to default."""
+        return self.feature_flags.get(flag_name, default)
+    
+    def set_feature_flag(self, flag_name: str, value: bool) -> None:
+        """Set a feature flag value."""
+        if self._feature_flags is None:
+            # Initialize feature flags if needed
+            _ = self.feature_flags
+        
+        self._feature_flags[flag_name] = value
+        logger.info(f"Set feature flag {flag_name} to {value}")
+
+# Create a singleton instance
+dynamic_settings = DynamicSettings()
 
 
 class Settings(BaseSettings):
@@ -15,6 +127,8 @@ class Settings(BaseSettings):
         validate_assignment=True
     )
 
+    # Environment Settings
+    ENVIRONMENT: str
     # API Settings
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str
@@ -31,6 +145,21 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     POSTGRES_PORT: str
     SQLALCHEMY_DATABASE_URI: str | None = None
+    
+    # Feature Flags - Now accessed through dynamic_settings rather than static config
+    @property
+    def FEATURE_FLAGS(self) -> Dict[str, bool]:
+        """Dynamic access to feature flags."""
+        return dynamic_settings.feature_flags
+    
+    # Path Feature Flags - Empty static dict, we'll use dynamic_settings
+    PATH_FEATURE_FLAGS: Dict[str, str] = {}
+    
+    # Dynamic path prefix mappings
+    @property
+    def PATH_PREFIX_FEATURE_FLAGS(self) -> Dict[str, str]:
+        """Dynamic access to path prefix mappings."""
+        return dynamic_settings.path_prefix_feature_flags
     
     # Security Settings
     LOGIN_ATTEMPTS_LIMIT: int = 3
@@ -169,6 +298,22 @@ class Settings(BaseSettings):
                 raise ValueError(f"URL validation failed: {str(e)}")
 
         return list(dict.fromkeys(validated_urls))
+
+    # Custom method to get a feature flag with default fallback
+    def get_feature_flag(self, flag_name: str, default: bool = True) -> bool:
+        """Get a feature flag value with fallback to default."""
+        return dynamic_settings.get_feature_flag(flag_name, default)
+    
+    # Custom method to set a feature flag
+    def set_feature_flag(self, flag_name: str, value: bool) -> None:
+        """Set a feature flag value."""
+        dynamic_settings.set_feature_flag(flag_name, value)
+    
+    # Helper to rediscover domains and refresh all dynamic settings
+    def refresh_domains(self) -> list[str]:
+        """Rediscover domains and refresh all dynamic settings."""
+        dynamic_settings.clear_cache()
+        return dynamic_settings.domains
 
 
 settings = Settings() 

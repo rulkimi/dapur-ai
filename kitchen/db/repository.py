@@ -58,31 +58,53 @@ class DatabaseRepository:
     """
     
     @staticmethod
-    async def init_db(retries: int = 5, delay: int = 5) -> None:
+    async def init_db(retries: int = 5, delay: int = 5) -> bool:
         """
         Initialize the database by creating all tables defined in the models.
+        
+        This method will:
+        1. Check if the database exists and create it if needed
+        2. Synchronize models with the database schema (create tables, add columns)
         
         Args:
             retries: Number of connection attempts before failing
             delay: Delay between retry attempts in seconds
         
-        Raises:
-            Exception: If database initialization fails after all retries
+        Returns:
+            bool: True if initialization was successful, False otherwise
         """
+        from db.sync import ensure_database_exists, sync_models_with_db
+        
         for attempt in range(retries):
             try:
-                logger.info(f"Attempting database connection (attempt {attempt + 1}/{retries})")
-                async with engine.begin() as conn:
-                    from db.base import Base
-                    await conn.run_sync(Base.metadata.create_all)
+                logger.info(f"Attempting database initialization (attempt {attempt + 1}/{retries})")
+                
+                # First, make sure the database exists
+                database_created = await ensure_database_exists()
+                
+                # Then connect with SQLAlchemy and sync the schema
+                if database_created:
+                    # If the database was just created, we can directly create all tables
+                    async with engine.begin() as conn:
+                        from db.base import Base
+                        logger.info("Creating all tables in newly created database")
+                        await conn.run_sync(Base.metadata.create_all)
+                else:
+                    # If the database already existed, sync models with the database schema
+                    logger.info("Synchronizing models with existing database schema")
+                    await sync_models_with_db(engine)
+                
                 logger.info("Database initialized successfully")
-                return
+                return True
             except Exception as e:
-                logger.error(f"Database connection attempt {attempt + 1} failed: {str(e)}")
+                logger.error(f"Database initialization attempt {attempt + 1} failed: {str(e)}")
                 if attempt == retries - 1:
-                    raise Exception(f"Failed to initialize database after {retries} attempts: {str(e)}")
+                    logger.error(f"Failed to initialize database after {retries} attempts: {str(e)}")
+                    return False
                 logger.info(f"Waiting {delay} seconds before next attempt...")
                 await asyncio.sleep(delay)
+        
+        return False
 
 class BaseRepository(Generic[ModelType]):
     def __init__(self, model: Type[ModelType], session: AsyncSession = Depends(get_repository_session)):

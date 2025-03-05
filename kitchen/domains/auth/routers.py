@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from domains.auth.schemas import AuthCreate, TokenSchema, AuthResponse, TokenResponse, ClientCredentialsRequest, AuthLogin
 from domains.auth.services import AuthService, get_auth_service
 from core.security import (
@@ -9,10 +9,16 @@ from core.security import (
 from domains.auth.models import Auth
 from fastapi.security import OAuth2PasswordRequestForm
 from core.config import settings
+from core.dependencies import controllable_endpoint, ControllableAPIRouter
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = ControllableAPIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register-by-email-password", response_model=TokenSchema)
+@controllable_endpoint(
+    path="/api/v1/auth/register-by-email-password:POST",
+    enabled=True,
+    description="Register a new user with email and password"
+)
 async def register_by_email_password(
     auth_data: AuthCreate,
     service: Annotated[AuthService, Depends(get_auth_service)]
@@ -21,6 +27,11 @@ async def register_by_email_password(
     return await service.create_auth_by_email_password(auth_data)
 
 @router.post("/login-by-email-password", response_model=TokenSchema)
+@controllable_endpoint(
+    path="/api/v1/auth/login-by-email-password:POST",
+    enabled=True,
+    description="Login with email and password via form"
+)
 async def login_by_email_password(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     service: Annotated[AuthService, Depends(get_auth_service)]
@@ -46,6 +57,11 @@ async def login_by_email_password(
     return await service.login_by_email_password(form_data.username, form_data.password)
 
 @router.post("/login-json", response_model=TokenSchema)
+@controllable_endpoint(
+    path="/api/v1/auth/login-json:POST",
+    enabled=True,
+    description="Login with email and password via JSON"
+)
 async def login_json(
     login_data: AuthLogin,
     service: Annotated[AuthService, Depends(get_auth_service)]
@@ -65,6 +81,11 @@ async def login_json(
     return await service.login_by_email_password(login_data.email, login_data.password)
 
 @router.get("/me", response_model=AuthResponse)
+@controllable_endpoint(
+    path="/api/v1/auth/me:GET",
+    enabled=True,
+    description="Get current authenticated user information"
+)
 async def get_current_auth_info(
     current_auth: Annotated[Auth, Depends(get_current_auth)]
 ) -> AuthResponse:
@@ -72,6 +93,11 @@ async def get_current_auth_info(
     return current_auth
 
 @router.post("/token/client-credentials", response_model=TokenResponse)
+@controllable_endpoint(
+    path="/api/v1/auth/token/client-credentials:POST",
+    enabled=True,
+    description="Get a token using client credentials"
+)
 async def get_client_credentials_token(
     request: ClientCredentialsRequest
 ) -> TokenResponse:

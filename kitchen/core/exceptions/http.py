@@ -39,6 +39,35 @@ class UnauthorizedException(AppException):
         super().__init__(message, details)
 
 
+class TokenException(UnauthorizedException):
+    """
+    Exception for token-related authentication failures.
+    
+    Use this for JWT token errors such as expired tokens, invalid signatures,
+    or malformed tokens.
+    """
+    error_code: str = "TOKEN_ERROR"
+    
+    def __init__(
+        self, 
+        message: str = "Token authentication failed", 
+        details: Optional[Dict[str, Any]] = None,
+        error_type: str = "general_token_error"
+    ):
+        if details is None:
+            details = {}
+        
+        # Add error_type to details if not already present
+        if "error_type" not in details:
+            details["error_type"] = error_type
+            
+        # Always include authenticate header for WWW-Authenticate
+        if "authenticate" not in details:
+            details["authenticate"] = "Bearer"
+            
+        super().__init__(message, details)
+
+
 class ForbiddenException(AppException):
     """
     Exception for authorization failures.
