@@ -83,11 +83,11 @@ recipes.value = recipeList;
       title="Resipi untuk Anda"
       :subtitle="`Kami jumpa ${recipes.length} resipi yang anda boleh buat dengan bahan yang ada.`"
     />
-    <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
+    <ul class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
       <li
         v-for="recipe in recipes"
         :key="recipe.id"
-        class="relative rounded-xl w-fit border border-gray-200 overflow-hidden"
+        class="w-fit border border-transparent"
       >
         <RecipeCard :recipe="recipe" />
       </li>
