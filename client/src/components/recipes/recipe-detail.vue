@@ -19,8 +19,13 @@ const tabItems = [
 ];
 const activeTab = ref<string>("ingredients");
 
-const countAmountByServings = (amount: number): number => {
-  return amount * servings.value;
+const countAmountByServings = (amount: number, measurement: string): string => {
+  const updatedAmount = amount * servings.value;
+  if ((measurement === 'grams' || measurement === 'g') && updatedAmount > 999) {
+    const amountInKg = Math.round((updatedAmount / 1000) * 100) / 100
+    return `${amountInKg} kg`
+  }
+  return `${updatedAmount} ${measurement}`
 }
 </script>
 
@@ -99,7 +104,7 @@ const countAmountByServings = (amount: number): number => {
             <div class="flex justify-between">
               <p>{{ ingredient.name }}</p>
               <p class="text-slate-500">
-                {{ countAmountByServings(ingredient.amount) }} {{ ingredient.measurement }}
+                {{ countAmountByServings(ingredient.amount, ingredient.measurement) }}
               </p>
             </div>
           </li>
