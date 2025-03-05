@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import Button from '../components/button.vue';
-import PreferenceLayout from '../layouts/preference-layout.vue';
-import Allergies from '../components/preferences/allergies.vue';
-import DietaryRestrictions from '../components/preferences/dietary-restrictions.vue';
-import PreferredCuisines from '../components/preferences/preferred-cuisines.vue';
+import Button from '../../components/button.vue';
+import PreferenceLayout from '../../layouts/preference-layout.vue';
+import Allergies from '../../components/preferences/allergies.vue';
+import DietaryRestrictions from '../../components/preferences/dietary-restrictions.vue';
+import PreferredCuisines from '../../components/preferences/preferred-cuisines.vue';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { capitalizeFirstLetter } from '../utils';
+import { capitalizeFirstLetter } from '../../utils';
 
 const dietaryRestrictions = ref<string[]>([]);
 const preferredCuisines = ref<string[]>([]);
@@ -83,7 +83,8 @@ const savePreferences = () => {
         </ul>
       </PreferenceLayout>
 
-      <div class="flex justify-end">
+      <div class="flex gap-1 justify-end">
+        <slot name="footer-button"></slot>
         <Button icon="bookmark" type="submit">
           Simpan Citarasa
         </Button>
