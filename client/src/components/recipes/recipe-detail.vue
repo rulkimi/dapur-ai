@@ -10,7 +10,7 @@ defineProps<{
 }>();
 
 // const emit = defineEmits(["close"]);
-const servings = ref<number>(1);
+const servings = ref<number>(2);
 
 const tabItems = [
   { title: "ingredients" },
@@ -18,6 +18,10 @@ const tabItems = [
   { title: "nutrition" },
 ];
 const activeTab = ref<string>("ingredients");
+
+const countAmountByServings = (amount: number): number => {
+  return amount * servings.value;
+}
 </script>
 
 <template>
@@ -34,7 +38,7 @@ const activeTab = ref<string>("ingredients");
       <p class="text-slate-500">{{ recipeDetail.description }}</p>
     </div>
     <img :src="recipeDetail.image_url" class="rounded-xl h-48 w-full object-cover" />
-    <ul class="flex flex-wrap gap-2 justify-between">
+    <ul class="flex flex-wrap gap-2 justify-between text-slate-500">
       <li>
         <font-awesome-icon
           class="text-teal-500 mr-1"
@@ -95,7 +99,7 @@ const activeTab = ref<string>("ingredients");
             <div class="flex justify-between">
               <p>{{ ingredient.name }}</p>
               <p class="text-slate-500">
-                {{ ingredient.amount }} {{ ingredient.measurement }}
+                {{ countAmountByServings(ingredient.amount) }} {{ ingredient.measurement }}
               </p>
             </div>
           </li>
@@ -113,7 +117,7 @@ const activeTab = ref<string>("ingredients");
         </ul>
       </template>
       <template #nutrition>
-        
+
       </template>
     </Tabs>
   </div>
