@@ -29,6 +29,7 @@ const handleEnterKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && ingredient.value.trim() !== '') addIngredient(ingredient.value);
 }
 const addIngredient = (newIngredient: string) => {
+  if (newIngredient === '') return;
   if (ingredients.value.includes(newIngredient)) {
     ingredient.value = ''
     return

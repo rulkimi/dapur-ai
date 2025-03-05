@@ -25,6 +25,7 @@ const handleEnterKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Enter' && allergy.value.trim() !== '') addAllergy(allergy.value);
 }
 const addAllergy = (newAllergy: string) => {
+  if (newAllergy === '') return;
   if (props.modelValue.includes(newAllergy)) {
     allergy.value = ''
     return
