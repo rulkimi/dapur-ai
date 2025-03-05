@@ -2,7 +2,7 @@
 import { type ButtonHTMLAttributes, ref } from 'vue';
 
 interface ButtonProps {
-  variant?: 'primary' | 'primary-outline';
+  variant?: 'primary' | 'primary-outline' | 'link';
   size?: 'md' | 'lg' | 'sm';
   icon?: string
   hoverIcon?: string
@@ -28,6 +28,10 @@ const buttonVariant = {
   'primary-outline': {
     default: 'border border-teal-500 text-teal-500',
     hover: 'hover:bg-teal-500 hover:text-white'
+  },
+  'link': {
+    default: '',
+    hover: 'hover:underline'
   }
 };
 

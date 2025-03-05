@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import FormInput from '../form-input.vue';
+import Button from '../button.vue';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
 
 const username = ref<string>('')
 const birthDate = ref<string>('')
@@ -50,7 +54,8 @@ const password = ref<string>('')
         </div>
       </div>
     </div>
-    <div class="flex justify-end gap-1">
+    <div class="flex justify-between gap-1">
+      <Button variant="link" @click="router.go(-1)">Back</Button>
       <slot name="footer"></slot>
     </div>
   </div>
