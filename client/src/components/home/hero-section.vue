@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import Button from '../button.vue'
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
 </script>
 
 <template>
@@ -11,13 +14,22 @@ import Button from '../button.vue'
           Cari idea makanan yang sedap menggunakan bahan-bahan yang anda sedia ada di dapur anda.
         </span>
       </div>
-      <Button
-        class="shadow-lg hover:shadow-sm"
-        size="lg"
-        icon="magnifying-glass"
-      >
-        Cari Resipi
-      </Button>
+      <div class="flex gap-2">
+        <Button
+          class="shadow-lg hover:shadow-sm"
+          size="lg"
+          icon="magnifying-glass"
+        >
+          Cari Resipi
+        </Button>
+        <Button
+          variant="primary-outline"
+          size="lg"
+          @click="router.push('/ingredients')"
+        >
+          Cuba Tanpa Log Masuk
+        </Button>
+      </div>
     </div>
     <div class="md:w-1/2">
       <img
