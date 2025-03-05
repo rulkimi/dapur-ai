@@ -34,7 +34,7 @@ const buttonVariant = {
 const buttonSize = {
   'md': 'px-3 py-1 h-[36px]',
   'lg': 'px-4 py-2 h-[46px]',
-  'sm': 'px-2 py-1 h-[32px]'
+  'sm': 'px-2 py-1 h-[28px]'
 }
 
 const buttonWidth = {

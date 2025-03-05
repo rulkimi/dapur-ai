@@ -6,6 +6,8 @@ import { capitalizeFirstLetter } from '../../utils';
 defineProps<{
   recipe: RecipeListItem
 }>()
+
+const emit = defineEmits(['view-recipe'])
 </script>
 
 <template>
@@ -45,6 +47,7 @@ defineProps<{
         icon="book"
         hover-icon="book-open"
         width="full"
+        @click="emit('view-recipe', recipe.id)"
       >
         View Recipe
       </Button>

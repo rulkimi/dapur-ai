@@ -24,6 +24,7 @@ import {
   faBook,
   faBookOpen,
   faArrowLeft,
+  faUsers,
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
@@ -46,6 +47,7 @@ library.add(
   faBook,
   faBookOpen,
   faArrowLeft,
+  faUsers,
 )
 
 export default FontAwesomeIcon;
