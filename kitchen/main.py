@@ -239,6 +239,10 @@ app = FastAPI(
 # Register exception handlers
 register_exception_handlers(app)
 
+# Specifically enable the onboarding endpoint (overriding any wildcard matches)
+# logger.info("Explicitly enabling the onboarding endpoint...")
+# register_endpoint("/api/v1/queries/onboarding", enabled=True, description="User onboarding endpoint")
+
 # Add middlewares - order matters! Feature flag middleware should be one of the first
 app.add_middleware(FeatureFlagMiddleware)
 app.add_middleware(RequestIDMiddleware)
@@ -364,6 +368,18 @@ async def refresh_domains():
         "message": "Domains refreshed successfully",
         "domains": domains,
         "discovered_routers": list(domain_routers.keys())
+    }
+
+# Add admin endpoint to view the endpoint registry
+@app.get("/api/v1/admin/endpoints")
+async def get_endpoints():
+    """
+    Admin endpoint to view the current endpoint registry.
+    This is useful for debugging feature flag issues.
+    """
+    return {
+        "status": "success",
+        "endpoints": ENDPOINT_REGISTRY
     }
 
 if __name__ == "__main__":

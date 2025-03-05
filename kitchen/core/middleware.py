@@ -262,6 +262,11 @@ class FeatureFlagMiddleware(BaseHTTPMiddleware):
                 
                 # Special case for wildcard paths (non-regex)
                 if "{" in base_registered_path and "}" in base_registered_path:
+                    # Skip the onboarding endpoint for wildcard matching
+                    if path == "/api/v1/queries/onboarding":
+                        logger.info(f"Path {path} - Skipping wildcard pattern match for onboarding endpoint")
+                        continue
+                        
                     # Convert wildcard path to regex pattern
                     pattern = base_registered_path.replace("{", "(?P<").replace("}", ">[^/]+)")
                     if re.match(pattern, path) and not info["enabled"]:
@@ -290,6 +295,11 @@ class FeatureFlagMiddleware(BaseHTTPMiddleware):
         Returns:
             bool: True if the path should be disabled, False otherwise
         """
+        # Special case for the onboarding endpoint
+        if path == "/api/v1/queries/onboarding":
+            logger.info(f"Path {path} - Explicitly enabled as onboarding endpoint")
+            return False
+            
         # First check if there are direct path mappings in the settings
         path_flags = settings.PATH_FEATURE_FLAGS or {}
         

@@ -93,10 +93,17 @@ class DynamicSettings:
     def path_prefix_feature_flags(self) -> Dict[str, str]:
         """Generate path prefix mappings for all domains on first access."""
         if self._path_prefix_feature_flags is None:
-            self._path_prefix_feature_flags = {
+            # Generate standard path prefixes for all domains
+            standard_prefixes = {
                 f"/api/v1/{domain}/": f"enable_{domain}_endpoints"
                 for domain in self.domains
             }
+            
+            # Add special case for query domain to handle both singular and plural forms
+            if "query" in self.domains:
+                standard_prefixes["/api/v1/queries/"] = "enable_query_endpoints"
+            
+            self._path_prefix_feature_flags = standard_prefixes
             logger.info(f"Generated path prefix mappings for domains: {list(self._path_prefix_feature_flags.keys())}")
         
         return self._path_prefix_feature_flags

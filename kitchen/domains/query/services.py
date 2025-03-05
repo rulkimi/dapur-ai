@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any, Type
 from fastapi import Depends
 import time
+from datetime import datetime, date
 from pydantic import BaseModel
 from infrastructure.external_services.llm.providers.factory import ProviderFactory
 from infrastructure.external_services.llm.providers.models import ProviderType, ModelType, Message
@@ -14,7 +15,8 @@ from domains.query.schemas import (
     QueryOut, 
     QuerySessionCreate, 
     QuerySessionUpdate,
-    ChatCreate
+    ChatCreate,
+    OnboardingRequest
 )
 from domains.query.errors import (
     QueryErrorCode, 
@@ -26,6 +28,7 @@ from domains.query.errors import (
     QueryNotFoundException,
     raise_validation_error
 )
+from domains.profiles.repositories import ProfileRepository
 
 class QueryService:
     """Service for handling queries to LLM providers."""
@@ -38,6 +41,7 @@ class QueryService:
             repository: QueryRepository for data access
         """
         self.repository = repository
+        self.provider_factory = ProviderFactory()
     
     async def create_query(self, query_data: QueryCreate, user_id: Optional[int] = None) -> QueryOut:
         """
@@ -936,6 +940,104 @@ class QueryService:
         except Exception:
             # Return None for any database errors
             return None
+
+    async def create_system_prompt(
+        self, 
+        onboarding_data: OnboardingRequest,
+        profile_repository: ProfileRepository
+    ) -> str:
+        """Generate a personalized system prompt from user data"""
+        # Format data for LLM
+        prompt_context = {
+            "food_preferences": onboarding_data.food_preferences.dict() if onboarding_data.food_preferences else {},
+            "additional_info": onboarding_data.additional_info
+        }
+        
+        # Meta-prompt for LLM
+        meta_prompt = """
+        Create a personalized system prompt for a cooking assistant based on the user data below. 
+        The system prompt should guide the assistant to:
+        1. Consider the user's dietary restrictions and allergies
+        2. Recommend recipes aligned with preferred cuisines
+        3. Adjust spice levels according to user preference
+        4. Consider any additional information provided
+        
+        User data:
+        {user_data}
+        
+        Generate a comprehensive system prompt (max 500 words) that incorporates this information.
+        """
+        
+        formatted_prompt = meta_prompt.format(user_data=str(prompt_context))
+        
+        # Generate system prompt using LLM
+        try:
+            # Using existing LLM provider factory
+            provider = self.provider_factory.get_provider(ProviderType.GEMINI)
+            model = ModelType.GEMINI_FLASH
+            
+            # Create and store the query
+            query = await self.repository.create_query(
+                prompt=formatted_prompt,
+                provider=ProviderType.GEMINI.value,
+                model=model.value,
+                user_id=onboarding_data.user_id
+            )
+            
+            # Generate the system prompt
+            start_time = time.time()
+            system_prompt = await provider.generate(
+                prompt=formatted_prompt,
+                model=model
+            )
+            execution_time = int((time.time() - start_time) * 1000)
+            
+            # Store the response
+            await self.repository.create_query_response(
+                query_id=query.query_id,
+                content=system_prompt,
+                execution_time=execution_time
+            )
+            
+            # Update user profile with the system prompt and preferences
+            profile = await profile_repository.get_by_user_id(onboarding_data.user_id)
+            
+            if profile:
+                # Update existing profile
+                await profile_repository.update_profile(
+                    profile=profile,
+                    system_prompt=system_prompt,
+                    food_preferences=onboarding_data.food_preferences.dict() if onboarding_data.food_preferences else None,
+                    additional_info=onboarding_data.additional_info
+                )
+            else:
+                # Create new profile if it doesn't exist
+                # Convert string date to date object if it exists
+                dob_date = None
+                if onboarding_data.dob:
+                    dob_date = datetime.strptime(onboarding_data.dob, '%Y-%m-%d').date()
+                
+                await profile_repository.create_profile(
+                    user_id=onboarding_data.user_id,
+                    name=onboarding_data.name,
+                    dob=dob_date,
+                    system_prompt=system_prompt,
+                    food_preferences=onboarding_data.food_preferences.dict() if onboarding_data.food_preferences else None,
+                    additional_info=onboarding_data.additional_info
+                )
+            
+            return system_prompt
+            
+        except ProviderError as e:
+            raise_service_error(
+                error_code=QueryErrorCode.LLM_PROVIDER_ERROR,
+                message=f"Error generating system prompt: {str(e)}"
+            )
+        except Exception as e:
+            raise_service_error(
+                error_code=QueryErrorCode.SYSTEM_PROMPT_GENERATION_FAILED,
+                message=f"System prompt generation failed: {str(e)}"
+            )
 
 def get_query_service(repository: QueryRepository = Depends(get_query_repository)) -> QueryService:
     """

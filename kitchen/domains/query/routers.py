@@ -1,4 +1,4 @@
-from typing import Annotated, List, Optional, Type
+from typing import Annotated, List, Optional, Type, Union, Any
 from fastapi import Depends, Query, HTTPException, Request, Response
 from pydantic import BaseModel
 from core.dependencies import controllable_endpoint, ControllableAPIRouter
@@ -12,12 +12,19 @@ from domains.query.schemas import (
     QuerySessionUpdate, 
     QuerySessionOut,
     QuerySessionWithQueries,
-    ChatCreate
+    ChatCreate,
+    OnboardingRequest,
+    OnboardingResponse
 )
 from domains.query.services import QueryService, get_query_service
-from domains.query.errors import InvalidSessionIdException
-from core.security import get_optional_current_active_user  # Use for optional authentication
+from domains.query.errors import (
+    InvalidSessionIdException, 
+    QueryErrorCode,
+    raise_validation_error
+)
+from core.security import get_optional_current_active_user, get_current_auth
 from domains.auth.models import Auth, Anonymous
+from domains.profiles.repositories import ProfileRepository, get_profile_repository
 
 router = ControllableAPIRouter(prefix="/queries", tags=["queries"])
 
@@ -173,7 +180,7 @@ async def create_chat_query(
         user_id = getattr(current_auth, "id", None)
         return await service.chat(chat_data, user_id)
 
-@router.post("/extract")
+@router.post("/extract", response_model=None)
 @controllable_endpoint(
     enabled=False,
     description="Extract structured data from an LLM provider using a Pydantic schema (admin only)"
@@ -184,7 +191,7 @@ async def extract_structured_data(
     request: Request,  # Add explicit request parameter
     service: Annotated[QueryService, Depends(get_query_service)],
     current_auth: Annotated[Optional[Auth], Depends(get_optional_current_active_user)] = None,
-):
+) -> Any:
     """
     Extract structured data from an LLM provider using a Pydantic schema.
     
@@ -285,7 +292,7 @@ async def update_query(
 
 @router.delete("/{query_id}")
 @controllable_endpoint(
-    enabled=False,
+    enabled=True,
     description="Delete a query (admin only)"
 )
 async def delete_query(
@@ -301,3 +308,41 @@ async def delete_query(
     """
     result = await service.delete_query(query_id)
     return {"success": result}
+
+@router.post("/onboarding", response_model=OnboardingResponse)
+@controllable_endpoint(
+    enabled=True,
+    description="Create a personalized system prompt based on user data"
+)
+async def onboard_user(
+    onboarding_data: OnboardingRequest,
+    request: Request,
+    service: Annotated[QueryService, Depends(get_query_service)],
+    profile_repository: Annotated[ProfileRepository, Depends(get_profile_repository)],
+    current_auth: Annotated[Union[Auth, Anonymous], Depends(get_optional_current_active_user)] = None
+) -> OnboardingResponse:
+    """
+    Create a personalized system prompt based on user data.
+    This endpoint accepts user profile information and preferences,
+    and generates a customized system prompt for future interactions.
+    """
+    
+    # Use authenticated user ID if available, otherwise use the provided user_id
+    user_id = current_auth.id if current_auth and not isinstance(current_auth, Anonymous) else onboarding_data.user_id
+    
+    # Set user_id for the profile repository
+    profile_repository.user_id = user_id
+    
+    # Generate system prompt
+    system_prompt = await service.create_system_prompt(
+        onboarding_data=onboarding_data,
+        profile_repository=profile_repository
+    )
+    
+    # Return response
+    return OnboardingResponse(
+        user_id=user_id,
+        system_prompt=system_prompt
+    )
+
+
