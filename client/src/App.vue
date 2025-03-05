@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import BaseLayout from './layouts/base-layout.vue';
-import { Transition } from 'vue';
 </script>
 
 <template>
