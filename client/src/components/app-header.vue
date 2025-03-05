@@ -9,11 +9,13 @@ const router = useRouter()
   <header class="sticky bg-white backdrop-filter backdrop-blur-sm bg-opacity-80 top-0 border-b">
     <div class="max-w-7xl mx-auto py-3 px-6 flex items-center justify-between">
       <div
-        class="text-teal-500 text-xl font-semibold flex items-center gap-2 cursor-pointer"
+        class="text-teal-500 text-xl font-semibold flex items-center gap-2 cursor-pointer group"
         @click="router.push('/')"
       >
-        <font-awesome-icon :icon="['fas', 'kitchen-set']" />
-        Dapur AI
+        <font-awesome-icon class="group-hover:scale-110 transition-transform duration-300" :icon="['fas', 'kitchen-set']" />
+        <span class="font-bold bg-clip-text text-transparent bg-gradient-to-t from-teal-600 to-teal-400">
+          DapurAI
+        </span>
       </div>
       <Button
         variant="primary-outline"
