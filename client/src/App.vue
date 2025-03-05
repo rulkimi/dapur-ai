@@ -5,9 +5,11 @@ import { Transition } from 'vue';
 
 <template>
   <BaseLayout>
-    <Transition name="fade">
-      <router-view></router-view>
+    <router-view v-slot="{ Component }">
+      <Transition name="fade">
+        <component :is="Component"></component>
     </Transition>
+    </router-view>
   </BaseLayout>
 </template>
 
