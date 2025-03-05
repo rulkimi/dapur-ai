@@ -72,7 +72,8 @@ const removeIngredient = (index: number) => {
         <li
           v-for="ingredient in commonIngredients"
           :key="ingredient"
-          class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
+          class="cursor-pointer rounded-md px-2 py-0.5"
+          :class="ingredients.includes(ingredient) ? 'bg-teal-100 text-teal-500' : 'bg-gray-100 hover:bg-gray-200 text-slate-600 '"
           @click="addIngredient(ingredient)"
         >
           {{ capitalizeFirstLetter(ingredient) }}

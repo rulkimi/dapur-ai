@@ -5,3 +5,7 @@
 .custom-card {
   @apply border border-gray-200 shadow-sm rounded-xl p-6;
 }
+
+input[type="checkbox"], input[type="radio"] {
+  @apply accent-teal-500;
+}
