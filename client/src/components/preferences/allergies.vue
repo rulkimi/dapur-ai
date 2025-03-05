@@ -56,24 +56,24 @@ const removeAllergy = (index: number) => {
     </Button>
   </div>
   <div class="space-y-2">
-    <span class="block text-slate-500">Alergi biasa:</span>
+    <span class="block text-slate-500 text-sm">Alergi biasa:</span>
     <ul class="flex flex-wrap gap-1">
       <li
         v-for="allergy in commonAllergies"
         :key="allergy"
-        class="cursor-pointer rounded-md px-2 py-0.5"
+        class="cursor-pointer rounded-md px-2 py-0.5 text-xs"
         :class="modelValue.includes(allergy) ? 'bg-teal-100 text-teal-500' : 'bg-gray-100 hover:bg-gray-200 text-slate-600'"
         @click="addAllergy(allergy)"
       >
         {{ capitalizeFirstLetter(allergy) }}
       </li>
     </ul>
-    <span v-if="modelValue.length" class="block text-slate-500">Alergi anda:</span>
+    <span v-if="modelValue.length" class="block text-slate-500 text-sm">Alergi anda:</span>
     <ul class="flex flex-wrap gap-1">
       <li
         v-for="(allergy, index) in modelValue"
         :key="allergy"
-        class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
+        class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5 text-xs"
       >
         {{ capitalizeFirstLetter(allergy) }}
         <font-awesome-icon

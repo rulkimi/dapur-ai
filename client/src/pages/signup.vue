@@ -32,7 +32,12 @@ const handleStepChange = (step: number) => {
   >
     <template #content="{ step }">
       <div v-if="step.title === 'Maklumat Akaun'">
-        <AccountInformation />
+        <AccountInformation>
+          <template #footer>
+            <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
+            <Button @click="handleNextStep">Next</Button>
+          </template>
+        </AccountInformation>
       </div>
       <div v-else-if="step.title === 'Citarasa Makanan'">
         <FoodPreferences>
@@ -41,10 +46,6 @@ const handleStepChange = (step: number) => {
           </template>
         </FoodPreferences>
       </div>
-    </template>
-    <template v-if="currentStep !== 2" #footer>
-      <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
-      <Button @click="handleNextStep">Next</Button>
     </template>
   </Stepper>
 </template>
