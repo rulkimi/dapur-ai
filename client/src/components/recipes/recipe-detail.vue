@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Button from '../button.vue';
+
 import { ref } from 'vue';
 import { type RecipeDetail } from '../../pages/recipes/[id].vue';
 
