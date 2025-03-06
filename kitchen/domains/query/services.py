@@ -1,10 +1,11 @@
 from typing import List, Optional, Dict, Any, Type
 from fastapi import Depends
 import time
+import uuid
 from datetime import datetime, date
 from pydantic import BaseModel
 from infrastructure.external_services.llm.providers.factory import ProviderFactory
-from infrastructure.external_services.llm.providers.models import ProviderType, ModelType, Message
+from infrastructure.external_services.llm.providers.models import ProviderType, ModelType, Message, LLMResponse
 from infrastructure.external_services.llm.providers.exceptions import ProviderError
 
 from domains.query.repositories import QueryRepository, get_query_repository
@@ -29,6 +30,22 @@ from domains.query.errors import (
     raise_validation_error
 )
 from domains.profiles.repositories import ProfileRepository
+
+def is_valid_uuid(val: str) -> bool:
+    """
+    Validate if a string is a valid UUID.
+    
+    Args:
+        val: String to validate
+        
+    Returns:
+        True if the string is a valid UUID, False otherwise
+    """
+    try:
+        uuid_obj = uuid.UUID(str(val))
+        return str(uuid_obj) == val.lower()
+    except (ValueError, AttributeError, TypeError):
+        return False
 
 class QueryService:
     """Service for handling queries to LLM providers."""
@@ -867,148 +884,167 @@ class QueryService:
     
     async def delete_session(self, session_id: str) -> bool:
         """
-        Delete a session by its ID.
+        Delete a session.
         
         Args:
-            session_id: The ID of the session to delete
+            session_id: The session ID
             
         Returns:
             True if the session was deleted, False otherwise
             
         Raises:
-            QueryNotFoundException: If the session with the specified ID is not found
+            QueryServiceException: If there's an error deleting the session
         """
         try:
-            # First verify the session exists
-            session = await self.get_session(session_id)
-            
-            # Delete the session
-            try:
-                result = await self.repository.delete_session(session_id)
-                if not result:
-                    raise_query_error(
-                        QueryErrorCode.SESSION_NOT_FOUND,
-                        f"Failed to delete session with ID {session_id}",
-                        {"session_id": session_id}
-                    )
-                return result
-            except Exception as e:
-                raise_service_error(
-                    QueryErrorCode.SESSION_VALIDATION_ERROR,
-                    f"Error deleting session: {str(e)}",
-                    {"session_id": session_id, "error": str(e)}
-                )
-                
-        except QueryNotFoundException:
-            # Re-raise QueryNotFoundException to be caught by the router
-            raise
+            return await self.repository.delete_session(session_id)
         except Exception as e:
-            # Catch any other unexpected exceptions
             raise_service_error(
-                QueryErrorCode.SESSION_VALIDATION_ERROR,
-                f"Unexpected error deleting session: {str(e)}",
+                QueryErrorCode.SESSION_DELETE_ERROR,
+                f"Error deleting session: {str(e)}",
                 {"session_id": session_id, "error": str(e)}
             )
-
+            
     async def _validate_session_id(self, session_id: Optional[str]) -> Optional[str]:
         """
-        Validate a session ID. Returns None for invalid IDs or empty/null values,
-        and verifies existence in the database.
+        Validate a session ID.
         
         Args:
-            session_id: The session ID to validate, or None
+            session_id: The session ID to validate
             
         Returns:
-            The validated session ID or None
+            The validated session ID, or None if not provided
+            
+        Raises:
+            QueryValidationException: If the session ID is invalid
         """
-        if session_id is None:
-            return None
+        if session_id is not None:
+            if not is_valid_uuid(session_id):
+                raise_validation_error(
+                    QueryErrorCode.VALIDATION_SESSION_ID_INVALID,
+                    "Invalid session ID format",
+                    {"session_id": session_id}
+                )
+        return session_id
+    
+    async def get_llm_response(
+        self, 
+        prompt: str, 
+        context_id: str = None,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        provider_type: ProviderType = ProviderType.GEMINI,
+        model: ModelType = ModelType.GEMINI_PRO,
+        **kwargs
+    ) -> LLMResponse:
+        """
+        Get a response from an LLM provider.
         
-        # Check for invalid placeholder values
-        if isinstance(session_id, str):
-            session_id_lower = session_id.lower().strip()
-            if session_id_lower in ("string", "", "null", "none", "undefined"):
-                return None
+        Args:
+            prompt: The prompt to send to the LLM
+            context_id: Optional context identifier
+            temperature: Temperature parameter for generation
+            max_tokens: Maximum tokens to generate
+            provider_type: The LLM provider type
+            model: The model to use
+            **kwargs: Additional parameters to pass to the provider
+            
+        Returns:
+            LLM response
+            
+        Raises:
+            ProviderError: If there's an error from the LLM provider
+        """
+        # Get provider
+        provider = self.provider_factory.get_provider(provider_type)
         
-        # Verify the session exists in the database
-        try:
-            session = await self.repository.get_session_by_id(session_id)
-            if not session:
-                # Return None for non-existent session IDs
-                return None
-            return session_id
-        except Exception:
-            # Return None for any database errors
-            return None
-
+        # Generate response
+        response_content = await provider.generate(
+            prompt=prompt,
+            model=model.value,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
+        )
+        
+        # Create response object
+        response = LLMResponse(
+            content=response_content,
+            provider=provider_type,
+            model=model
+        )
+        
+        return response
+        
     async def create_system_prompt(
         self, 
         onboarding_data: OnboardingRequest,
         profile_repository: ProfileRepository
     ) -> str:
         """Generate a personalized system prompt from user data"""
-        # Format data for LLM
-        prompt_context = {
-            "food_preferences": onboarding_data.food_preferences.dict() if onboarding_data.food_preferences else {},
-            "additional_info": onboarding_data.additional_info
-        }
-        
-        # Meta-prompt for LLM
-        meta_prompt = """
-        Create a personalized system prompt for a cooking assistant based on the user data below. 
-        The system prompt should guide the assistant to:
-        1. Consider the user's dietary restrictions and allergies
-        2. Recommend recipes aligned with preferred cuisines
-        3. Adjust spice levels according to user preference
-        4. Consider any additional information provided
-        
-        User data:
-        {user_data}
-        
-        Generate a comprehensive system prompt (max 500 words) that incorporates this information.
-        """
-        
-        formatted_prompt = meta_prompt.format(user_data=str(prompt_context))
-        
-        # Generate system prompt using LLM
         try:
-            # Using existing LLM provider factory
-            provider = self.provider_factory.get_provider(ProviderType.GEMINI)
-            model = ModelType.GEMINI_FLASH
-            
-            # Create and store the query
-            query = await self.repository.create_query(
-                prompt=formatted_prompt,
-                provider=ProviderType.GEMINI.value,
-                model=model.value,
-                user_id=onboarding_data.user_id
-            )
-            
-            # Generate the system prompt
-            start_time = time.time()
-            system_prompt = await provider.generate(
-                prompt=formatted_prompt,
-                model=model
-            )
-            execution_time = int((time.time() - start_time) * 1000)
-            
-            # Store the response
-            await self.repository.create_query_response(
-                query_id=query.query_id,
-                content=system_prompt,
-                execution_time=execution_time
-            )
-            
-            # Update user profile with the system prompt and preferences
+            # Get existing profile if it exists
             profile = await profile_repository.get_by_user_id(onboarding_data.user_id)
             
+            # Save food preferences to the new tables
+            if onboarding_data.food_preferences:
+                # Save array-type preferences
+                await profile_repository.save_food_preferences(
+                    user_id=onboarding_data.user_id,
+                    dietary_restrictions=onboarding_data.food_preferences.dietary_restrictions,
+                    allergies=onboarding_data.food_preferences.allergies,
+                    preferred_cuisines=onboarding_data.food_preferences.preferred_cuisines
+                )
+                
+                # Save scalar preferences
+                await profile_repository.save_preference_settings(
+                    user_id=onboarding_data.user_id,
+                    spice_level=onboarding_data.food_preferences.spice_level,
+                    additional_info=onboarding_data.additional_info
+                )
+            
+            # Get the structured preferences for the LLM
+            food_prefs = await profile_repository.get_structured_preferences(onboarding_data.user_id)
+            
+            # Format data for LLM
+            prompt_context = {
+                "food_preferences": food_prefs,
+                "additional_info": (await profile_repository.get_preference_settings(onboarding_data.user_id)).additional_info 
+                    if await profile_repository.get_preference_settings(onboarding_data.user_id) else onboarding_data.additional_info
+            }
+            
+            # Meta-prompt for LLM
+            meta_prompt = """
+            Create a personalized system prompt for a cooking assistant based on the user data below. 
+            The system prompt should guide the assistant to:
+            1. Consider the user's dietary restrictions and allergies
+            2. Recommend recipes aligned with preferred cuisines
+            3. Adjust spice levels according to user preference
+            4. Consider any additional information provided
+            
+            User data:
+            {user_data}
+            
+            Generate a comprehensive system prompt (max 500 words) that incorporates this information.
+            """
+            
+            formatted_prompt = meta_prompt.format(user_data=str(prompt_context))
+            
+            # Get response from LLM provider
+            llm_response = await self.get_llm_response(
+                prompt=formatted_prompt, 
+                context_id=f"onboarding_{onboarding_data.user_id}",
+                temperature=0.7,
+                max_tokens=1024,
+            )
+            
+            # Save the system prompt
+            system_prompt = llm_response.content.strip()
+            
             if profile:
-                # Update existing profile
+                # Update existing profile - only update system_prompt
                 await profile_repository.update_profile(
                     profile=profile,
-                    system_prompt=system_prompt,
-                    food_preferences=onboarding_data.food_preferences.dict() if onboarding_data.food_preferences else None,
-                    additional_info=onboarding_data.additional_info
+                    system_prompt=system_prompt
                 )
             else:
                 # Create new profile if it doesn't exist
@@ -1021,9 +1057,7 @@ class QueryService:
                     user_id=onboarding_data.user_id,
                     name=onboarding_data.name,
                     dob=dob_date,
-                    system_prompt=system_prompt,
-                    food_preferences=onboarding_data.food_preferences.dict() if onboarding_data.food_preferences else None,
-                    additional_info=onboarding_data.additional_info
+                    system_prompt=system_prompt
                 )
             
             return system_prompt
