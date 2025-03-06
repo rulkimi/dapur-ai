@@ -6,7 +6,6 @@ import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 
-const emit = defineEmits(['next'])
 const router = useRouter()
 
 const username = ref<string>('')
@@ -39,14 +38,17 @@ const isPasswordMatch = () => {
   return password.value === confirmPassword.value; 
 };
 
+const emit = defineEmits(['next', 'step-completed']) 
+
 const handleNextButtonClick = async () => {
   await v$.value.$validate()
   if (!isPasswordMatch()) {
     error.value = true
     errorMessage.value = 'Passwords do not match.'
     return
-  } else {
+  } else if (!v$.value.$error) { 
     emit('next')
+    emit('step-completed')
   }
 }
 </script>

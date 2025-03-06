@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useStepperStore } from '../../stores/signup-stepper-store';
+
 export interface Step {
   id: string
   title: string
@@ -13,8 +15,12 @@ const emit = defineEmits<{
   (e: 'update:currentStep', step: number): void
 }>()
 
+const stepperStore = useStepperStore()
 const handleClick = (index: number) => {
-  emit('update:currentStep', index + 1)
+  console.log(stepperStore.completedSteps, index + 1)
+  if (stepperStore.completedSteps.includes(index)) { // Check if step is completed
+    emit('update:currentStep', index + 1)
+  }
 }
 </script>
 
@@ -25,7 +31,10 @@ const handleClick = (index: number) => {
         v-for="(step, index) in steps"
         :key="index"
         class="flex-grow cursor-pointer"
-        :class="currentStep >= index + 1 ? 'text-teal-500' : 'text-slate-500'"
+        :class="[
+          currentStep >= index + 1 ? 'text-teal-500' : 'text-slate-500',
+          !stepperStore.completedSteps.includes(index + 1) && index + 1 > currentStep ? 'cursor-not-allowed' : '' 
+        ]"
         @click="handleClick(index)"
       >
         <div
