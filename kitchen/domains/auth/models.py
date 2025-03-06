@@ -23,6 +23,15 @@ class Auth(Base):
     
     # Add the relationship to Profile
     profile = relationship("Profile", back_populates="user", uselist=False)
+    
+    # Add relationships to food preferences models
+    food_preferences = relationship("UserFoodPreference", 
+                                    cascade="all, delete-orphan",
+                                    backref="user")
+    preference_settings = relationship("UserPreferenceSettings", 
+                                       cascade="all, delete-orphan", 
+                                       uselist=False,
+                                       backref="user")
 
     def verify_password(self, plain_password: str) -> bool:
         """Verify if the provided plain password matches the stored hashed password"""

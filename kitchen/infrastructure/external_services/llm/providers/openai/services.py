@@ -1,68 +1,81 @@
-from typing import AsyncIterable, List, Dict, Type, Any, Optional, Union
-import asyncio
-from pydantic import BaseModel
-from pydantic_ai import Agent
-from pydantic_ai.models.gemini import GeminiModel
-from pydantic_ai.result import FinalResult, AgentStream
 import json
 import re
-from pydantic import ValidationError
+from typing import Type, List, Dict, Any, AsyncIterable, Optional, Union
+from pydantic import BaseModel, ValidationError
+
+# Import Pydantic AI components
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai import Agent
 
 # Import core settings
 from core.config import settings
 
 from ..protocols import StreamingLLMProvider
-from ..exceptions import AuthenticationError, RateLimitError, InvalidResponseError, ConfigurationError, SchemaValidationError, ProviderError
-from ..adapters import ResponseAdapter
-from .config import GeminiConfig
+from ..models import ProviderType, ModelType, Message
+from ..exceptions import (
+    ProviderError, 
+    AuthenticationError, 
+    RateLimitError, 
+    InvalidResponseError, 
+    ConfigurationError, 
+    SchemaValidationError
+)
+from .config import OpenAIConfig
 
-class GeminiProvider(StreamingLLMProvider):
-    """Provider implementation for Google's Gemini models."""
+class OpenAIProvider(StreamingLLMProvider):
+    """Provider implementation for OpenAI models using Pydantic AI."""
     
-    def __init__(self, config: Optional[GeminiConfig] = None):
-        self.config = config or GeminiConfig()
+    def __init__(self, config: Optional[OpenAIConfig] = None):
+        """Initialize the OpenAI provider with a configuration."""
+        self.config = config or OpenAIConfig()
         
         try:
             # Use API key from core settings if not already set in config
-            if not self.config.api_key and hasattr(settings, 'GEMINI_API_KEY'):
-                self.config.api_key = settings.GEMINI_API_KEY
+            if not self.config.api_key and hasattr(settings, 'OPENAI_API_KEY'):
+                self.config.api_key = settings.OPENAI_API_KEY
                 
             # Check if API key is set
             if not self.config.api_key:
-                raise ConfigurationError("Gemini API key is not set. Please set the GEMINI_API_KEY environment variable or in your application settings.")
+                raise ConfigurationError("OpenAI API key is not set. Please set the OPENAI_API_KEY environment variable or in your application settings.")
                 
-            # Setup for Generative Language API
-            self.model = GeminiModel(
-                self.config.model,
+            # Initialize using Pydantic AI's OpenAI model - only pass essential parameters
+            self.model = OpenAIModel(
+                model_name=self.config.model,
                 api_key=self.config.api_key
             )
-                
+            
+            # Create an Agent instance with the model
             self.agent = Agent(self.model)
+            
+            # Save config for later use in methods
+            self.temperature = self.config.temperature
+            self.max_tokens = self.config.max_tokens
+            self.top_p = self.config.top_p
+            self.frequency_penalty = self.config.frequency_penalty
+            self.presence_penalty = self.config.presence_penalty
+            self.extra_params = self.config.extra_params
         except Exception as e:
-            raise ConfigurationError(f"Failed to initialize GeminiProvider: {str(e)}")
-            
+            raise ConfigurationError(f"Failed to initialize OpenAIProvider: {str(e)}")
+    
     async def generate(self, prompt: str, **kwargs) -> str:
-        """Generate text from a prompt using Gemini."""
-        if not prompt or not isinstance(prompt, str):
-            raise ValueError("Prompt must be a non-empty string")
-            
+        """Generate text from a prompt using OpenAI models via Pydantic AI."""
         try:
-            # Merge config with kwargs, with kwargs taking precedence
-            params = {
-                "temperature": kwargs.get("temperature", self.config.temperature),
-                "max_tokens": kwargs.get("max_tokens", self.config.max_output_tokens),
-                "top_p": kwargs.get("top_p", self.config.top_p),
-                "top_k": kwargs.get("top_k", self.config.top_k)
+            # Get parameters from kwargs or use defaults from config
+            generation_kwargs = {
+                "temperature": kwargs.get("temperature", self.temperature),
+                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
+                "top_p": kwargs.get("top_p", self.top_p),
+                "frequency_penalty": kwargs.get("frequency_penalty", self.frequency_penalty),
+                "presence_penalty": kwargs.get("presence_penalty", self.presence_penalty),
             }
             
             # Filter out None values
-            params = {k: v for k, v in params.items() if v is not None}
+            generation_kwargs = {k: v for k, v in generation_kwargs.items() if v is not None}
             
-            # Using the correct API parameters from the Agent.run method:
-            # run(user_prompt, result_type, message_history, model, deps, model_settings...)
+            # Use Pydantic AI's agent for text generation
             result = await self.agent.run(
-                user_prompt=prompt, 
-                model_settings=params
+                user_prompt=prompt,
+                model_settings=generation_kwargs
             )
             
             # Handle AgentRunResult object
@@ -70,26 +83,23 @@ class GeminiProvider(StreamingLLMProvider):
                 return str(result.data)
             else:
                 return str(result)
-            
         except Exception as e:
-            self._handle_gemini_error(e)
+            self._handle_openai_error(e)
             
     async def extract(self, prompt: str, schema: Type[BaseModel], **kwargs) -> BaseModel:
         """Extract structured data from LLM responses using Pydantic schemas."""
-        if not prompt or not isinstance(prompt, str):
-            raise ValueError("Prompt must be a non-empty string")
-        
         try:
-            # Merge config with kwargs, with kwargs taking precedence
-            params = {
-                "temperature": kwargs.get("temperature", self.config.temperature),
-                "max_tokens": kwargs.get("max_tokens", self.config.max_output_tokens),
-                "top_p": kwargs.get("top_p", self.config.top_p),
-                "top_k": kwargs.get("top_k", self.config.top_k)
+            # Get parameters from kwargs or use defaults from config
+            generation_kwargs = {
+                "temperature": kwargs.get("temperature", self.temperature),
+                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
+                "top_p": kwargs.get("top_p", self.top_p),
+                "frequency_penalty": kwargs.get("frequency_penalty", self.frequency_penalty),
+                "presence_penalty": kwargs.get("presence_penalty", self.presence_penalty),
             }
             
             # Filter out None values
-            params = {k: v for k, v in params.items() if v is not None}
+            generation_kwargs = {k: v for k, v in generation_kwargs.items() if v is not None}
             
             # Create a detailed system prompt with the schema
             schema_json = schema.model_json_schema()
@@ -113,10 +123,10 @@ Important instructions:
             # Set a system prompt for the agent
             full_prompt = f"{system_prompt}\n\nExtract information from this text: {prompt}"
             
-            # Use the run method
+            # Use the run method instead of chat
             response = await self.agent.run(
                 user_prompt=full_prompt,
-                model_settings=params
+                model_settings=generation_kwargs
             )
             
             # Extract JSON from response - handle AgentRunResult object
@@ -138,7 +148,7 @@ Important instructions:
         except json.JSONDecodeError as e:
             raise InvalidResponseError(f"Failed to parse JSON from response: {str(e)}\nResponse: {json_response}")
         except Exception as e:
-            self._handle_gemini_error(e)
+            self._handle_openai_error(e)
             
     def _extract_json(self, text: str) -> str:
         """Extract JSON from a text string that might contain other text."""
@@ -155,23 +165,21 @@ Important instructions:
             
         # If nothing else works, return the whole text
         return text.strip()
-            
+    
     async def chat(self, messages: List[Dict[str, str]], **kwargs) -> str:
-        """Generate a response based on chat history."""
+        """Generate a chat response."""
         try:
-            if not messages or not isinstance(messages, list):
-                raise ValueError("Messages must be a non-empty list")
-                
-            # Merge config with kwargs, with kwargs taking precedence
-            params = {
-                "temperature": kwargs.get("temperature", self.config.temperature),
-                "max_tokens": kwargs.get("max_tokens", self.config.max_output_tokens),
-                "top_p": kwargs.get("top_p", self.config.top_p),
-                "top_k": kwargs.get("top_k", self.config.top_k)
+            # Get parameters from kwargs or use defaults from config
+            generation_kwargs = {
+                "temperature": kwargs.get("temperature", self.temperature),
+                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
+                "top_p": kwargs.get("top_p", self.top_p),
+                "frequency_penalty": kwargs.get("frequency_penalty", self.frequency_penalty),
+                "presence_penalty": kwargs.get("presence_penalty", self.presence_penalty),
             }
             
             # Filter out None values
-            params = {k: v for k, v in params.items() if v is not None}
+            generation_kwargs = {k: v for k, v in generation_kwargs.items() if v is not None}
             
             # Format messages as conversation
             conversation = ""
@@ -192,10 +200,10 @@ Important instructions:
             # Add final prompt for assistant
             conversation += "Assistant: "
             
-            # Generate response
+            # Generate response using run method
             result = await self.agent.run(
                 user_prompt=conversation,
-                model_settings=params
+                model_settings=generation_kwargs
             )
             
             # Handle AgentRunResult object
@@ -203,35 +211,32 @@ Important instructions:
                 return str(result.data)
             else:
                 return str(result)
-                
         except Exception as e:
-            self._handle_gemini_error(e)
-            
+            self._handle_openai_error(e)
+    
     async def stream(self, prompt: str, **kwargs) -> AsyncIterable[str]:
-        """Stream text generation results from Gemini."""
-        if not prompt or not isinstance(prompt, str):
-            raise ValueError("Prompt must be a non-empty string")
-            
+        """Stream text generation results."""
         try:
-            # Merge config with kwargs, with kwargs taking precedence
-            params = {
-                "temperature": kwargs.get("temperature", self.config.temperature),
-                "max_tokens": kwargs.get("max_tokens", self.config.max_output_tokens),
-                "top_p": kwargs.get("top_p", self.config.top_p),
-                "top_k": kwargs.get("top_k", self.config.top_k),
+            # Get parameters from kwargs or use defaults from config
+            generation_kwargs = {
+                "temperature": kwargs.get("temperature", self.temperature),
+                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
+                "top_p": kwargs.get("top_p", self.top_p),
+                "frequency_penalty": kwargs.get("frequency_penalty", self.frequency_penalty),
+                "presence_penalty": kwargs.get("presence_penalty", self.presence_penalty),
                 "stream": True
             }
             
             # Filter out None values
-            params = {k: v for k, v in params.items() if v is not None}
+            generation_kwargs = {k: v for k, v in generation_kwargs.items() if v is not None}
             
-            # Check if the model has streaming capability
+            # Check if the model has streaming capability (some older models might not)
             if hasattr(self.agent, 'stream'):
+                # Use streaming capability
                 try:
-                    # Use streaming capability
                     async with self.agent.stream(
                         user_prompt=prompt,
-                        model_settings=params
+                        model_settings=generation_kwargs
                     ) as stream:
                         async for chunk in stream:
                             # Handle different chunk formats
@@ -244,12 +249,12 @@ Important instructions:
                             else:
                                 yield str(chunk)
                 except Exception as e:
-                    self._handle_gemini_error(e)
+                    self._handle_openai_error(e)
             else:
                 # Fallback to run method if stream is not available
                 result = await self.agent.run(
                     user_prompt=prompt,
-                    model_settings=params
+                    model_settings=generation_kwargs
                 )
                 
                 # Handle AgentRunResult object
@@ -258,25 +263,23 @@ Important instructions:
                 else:
                     yield str(result)
         except Exception as e:
-            self._handle_gemini_error(e)
+            self._handle_openai_error(e)
             
     async def stream_chat(self, messages: List[Dict[str, str]], **kwargs) -> AsyncIterable[str]:
-        """Stream chat responses from Gemini."""
+        """Stream chat responses."""
         try:
-            if not messages or not isinstance(messages, list):
-                raise ValueError("Messages must be a non-empty list")
-                
-            # Merge config with kwargs, with kwargs taking precedence
-            params = {
-                "temperature": kwargs.get("temperature", self.config.temperature),
-                "max_tokens": kwargs.get("max_tokens", self.config.max_output_tokens),
-                "top_p": kwargs.get("top_p", self.config.top_p),
-                "top_k": kwargs.get("top_k", self.config.top_k),
+            # Get parameters from kwargs or use defaults from config
+            generation_kwargs = {
+                "temperature": kwargs.get("temperature", self.temperature),
+                "max_tokens": kwargs.get("max_tokens", self.max_tokens),
+                "top_p": kwargs.get("top_p", self.top_p),
+                "frequency_penalty": kwargs.get("frequency_penalty", self.frequency_penalty),
+                "presence_penalty": kwargs.get("presence_penalty", self.presence_penalty),
                 "stream": True
             }
             
             # Filter out None values
-            params = {k: v for k, v in params.items() if v is not None}
+            generation_kwargs = {k: v for k, v in generation_kwargs.items() if v is not None}
             
             # Format messages as conversation
             conversation = ""
@@ -297,13 +300,13 @@ Important instructions:
             # Add final prompt for assistant
             conversation += "Assistant: "
             
-            # Check if the model has streaming capability
+            # Check if the model has streaming capability (some older models might not)
             if hasattr(self.agent, 'stream'):
+                # Use streaming capability
                 try:
-                    # Use streaming capability
                     async with self.agent.stream(
                         user_prompt=conversation,
-                        model_settings=params
+                        model_settings=generation_kwargs
                     ) as stream:
                         async for chunk in stream:
                             # Handle different chunk formats
@@ -316,12 +319,12 @@ Important instructions:
                             else:
                                 yield str(chunk)
                 except Exception as e:
-                    self._handle_gemini_error(e)
+                    self._handle_openai_error(e)
             else:
                 # Fallback to run method if stream is not available
                 result = await self.agent.run(
                     user_prompt=conversation,
-                    model_settings=params
+                    model_settings=generation_kwargs
                 )
                 
                 # Handle AgentRunResult object
@@ -330,17 +333,17 @@ Important instructions:
                 else:
                     yield str(result)
         except Exception as e:
-            self._handle_gemini_error(e)
-
-    def _handle_gemini_error(self, error: Exception) -> None:
-        """Handle Gemini-specific errors and convert them to our exception types."""
-        error_message = str(error).lower()
+            self._handle_openai_error(e)
+    
+    def _handle_openai_error(self, error: Exception) -> None:
+        """Handle OpenAI-specific errors and convert them to our exception types."""
+        error_message = str(error)
         
-        if "authentication" in error_message or "api key" in error_message:
-            raise AuthenticationError(f"Authentication failed with Gemini: {str(error)}")
-        elif "rate limit" in error_message or "quota" in error_message:
-            raise RateLimitError(f"Rate limit exceeded with Gemini: {str(error)}")
-        elif "schema" in error_message or "validation" in error_message:
-            raise SchemaValidationError(f"Schema validation error: {str(error)}")
+        if "Unauthorized" in error_message or "Authentication" in error_message:
+            raise AuthenticationError(f"OpenAI authentication error: {error_message}")
+        elif "Rate limit" in error_message or "RateLimitError" in error_message:
+            raise RateLimitError(f"OpenAI rate limit error: {error_message}")
+        elif "validation error" in error_message.lower():
+            raise SchemaValidationError(f"Schema validation error: {error_message}")
         else:
-            raise ProviderError(f"Gemini error: {str(error)}") 
+            raise ProviderError(f"OpenAI error: {error_message}") 

@@ -7,6 +7,10 @@ from .factory import ProviderFactory
 from .gemini.services import GeminiProvider
 ProviderFactory.register(ProviderType.GEMINI, GeminiProvider)
 
+# Register OpenAI provider
+from .openai.services import OpenAIProvider
+ProviderFactory.register(ProviderType.OPENAI, OpenAIProvider)
+
 # Convenience function for FastAPI dependency injection
 def get_llm_provider(provider_type: ProviderType = ProviderType.GEMINI) -> LLMProvider:
     """Get an LLM provider for dependency injection."""
