@@ -14,6 +14,10 @@ class ModelType(str, Enum):
     # Gemini models
     GEMINI_PRO = "gemini-1.5-pro"
     GEMINI_FLASH = "gemini-1.5-flash"
+    # OpenAI models
+    GPT_4 = "gpt-4"
+    GPT_4_TURBO = "gpt-4-turbo"
+    GPT_35_TURBO = "gpt-3.5-turbo"
     # Add more as needed
 
 class Message(BaseModel):

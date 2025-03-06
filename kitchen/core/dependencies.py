@@ -364,7 +364,7 @@ def controllable_endpoint(
         async def wrapper(*args, **kwargs):
             # Extract request from kwargs if available
             request = next((arg for arg in args if isinstance(arg, Request)), 
-                          kwargs.get('request'))
+                          next((kwargs[k] for k in kwargs if isinstance(kwargs[k], Request)), None))
             
             # If we have a request, we can dynamically check if the endpoint is enabled
             if request:

@@ -223,6 +223,133 @@ class ProfileRepository(BaseRepository[Profile]):
         
         return result
 
+class UserFoodPreferenceRepository(BaseRepository[UserFoodPreference]):
+    def __init__(self, session: AsyncSession = Depends(get_repository_session)):
+        super().__init__(UserFoodPreference, session)
+    
+    async def get_user_food_preferences(self, user_id: int) -> List[UserFoodPreference]:
+        """Get all food preferences for a user"""
+        query = select(UserFoodPreference).where(UserFoodPreference.user_id == user_id)
+        result = await self.session.execute(query)
+        return result.scalars().all()
+    
+    async def save_food_preferences(
+        self,
+        user_id: int,
+        dietary_restrictions: Optional[List[str]] = None,
+        allergies: Optional[List[str]] = None,
+        preferred_cuisines: Optional[List[str]] = None
+    ) -> List[UserFoodPreference]:
+        """Save multiple food preferences for a user"""
+        # Delete existing preferences first
+        if dietary_restrictions is not None:
+            await self.session.execute(
+                delete(UserFoodPreference)
+                .where(
+                    UserFoodPreference.user_id == user_id,
+                    UserFoodPreference.preference_type == 'dietary_restrictions'
+                )
+            )
+            
+        if allergies is not None:
+            await self.session.execute(
+                delete(UserFoodPreference)
+                .where(
+                    UserFoodPreference.user_id == user_id,
+                    UserFoodPreference.preference_type == 'allergies'
+                )
+            )
+            
+        if preferred_cuisines is not None:
+            await self.session.execute(
+                delete(UserFoodPreference)
+                .where(
+                    UserFoodPreference.user_id == user_id,
+                    UserFoodPreference.preference_type == 'preferred_cuisines'
+                )
+            )
+        
+        # Create new preferences
+        preferences = []
+        
+        if dietary_restrictions:
+            for restriction in dietary_restrictions:
+                pref = UserFoodPreference(
+                    user_id=user_id,
+                    preference_type='dietary_restrictions',
+                    preference_value=restriction
+                )
+                self.session.add(pref)
+                preferences.append(pref)
+                
+        if allergies:
+            for allergy in allergies:
+                pref = UserFoodPreference(
+                    user_id=user_id,
+                    preference_type='allergies',
+                    preference_value=allergy
+                )
+                self.session.add(pref)
+                preferences.append(pref)
+                
+        if preferred_cuisines:
+            for cuisine in preferred_cuisines:
+                pref = UserFoodPreference(
+                    user_id=user_id,
+                    preference_type='preferred_cuisines',
+                    preference_value=cuisine
+                )
+                self.session.add(pref)
+                preferences.append(pref)
+        
+        if preferences:
+            await self.session.commit()
+            
+        return preferences
+
+
+class UserPreferenceSettingsRepository(BaseRepository[UserPreferenceSettings]):
+    def __init__(self, session: AsyncSession = Depends(get_repository_session)):
+        super().__init__(UserPreferenceSettings, session)
+    
+    async def get_user_preference_settings(self, user_id: int) -> Optional[UserPreferenceSettings]:
+        """Get preference settings for a user"""
+        query = select(UserPreferenceSettings).where(UserPreferenceSettings.user_id == user_id)
+        result = await self.session.execute(query)
+        return result.scalars().first()
+    
+    async def save_preference_settings(
+        self,
+        user_id: int,
+        spice_level: Optional[str] = None,
+        additional_info: Optional[str] = None
+    ) -> UserPreferenceSettings:
+        """Save or update preference settings for a user"""
+        # Check if settings already exist
+        query = select(UserPreferenceSettings).where(UserPreferenceSettings.user_id == user_id)
+        result = await self.session.execute(query)
+        settings = result.scalars().first()
+        
+        if settings:
+            # Update existing settings
+            if spice_level is not None:
+                settings.spice_level = spice_level
+            if additional_info is not None:
+                settings.additional_info = additional_info
+        else:
+            # Create new settings
+            settings = UserPreferenceSettings(
+                user_id=user_id,
+                spice_level=spice_level,
+                additional_info=additional_info
+            )
+            self.session.add(settings)
+        
+        await self.session.commit()
+        await self.session.refresh(settings)
+        return settings
+
+
 def get_profile_repository(session: AsyncSession = Depends(get_repository_session)) -> ProfileRepository:
     """
     Provides a ProfileRepository instance for dependency injection.

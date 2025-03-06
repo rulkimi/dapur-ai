@@ -321,6 +321,10 @@ class Settings(BaseSettings):
         """Rediscover domains and refresh all dynamic settings."""
         dynamic_settings.clear_cache()
         return dynamic_settings.domains
+    
+    # LLM Settings
+    OPENAI_API_KEY: str
+    GEMINI_API_KEY: str
 
 
 settings = Settings() 

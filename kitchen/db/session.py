@@ -72,6 +72,16 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.close()
 
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Get an async database session for use in FastAPI dependencies.
+    
+    This is a wrapper around get_repository_session() for maintaining
+    backward compatibility with existing router implementations.
+    """
+    async for session in get_repository_session():
+        yield session
+
 @asynccontextmanager
 async def get_db_session(max_retries: int = 3, retry_delay: int = 1) -> AsyncGenerator[AsyncSession, None]:
     """
