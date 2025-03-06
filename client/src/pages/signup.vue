@@ -32,11 +32,10 @@ const handleStepChange = (step: number) => {
   >
     <template #content="{ step }">
       <div v-if="step.title === 'Maklumat Akaun'">
-        <AccountInformation>
+        <AccountInformation @next="handleNextStep">
           <template #footer>
             <div class="flex gap-1">
               <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
-              <Button @click="handleNextStep">Next</Button>
             </div>
           </template>
         </AccountInformation>

@@ -6,12 +6,17 @@ interface FormInputProps {
   type?: string
   placeholder?: string
   icon?: string
+  iconPosition?: 'append' | 'prepend'
   size?: 'sm' | 'md' | 'lg'
+  error?: boolean
+  errorMessage?: string
+  required?: boolean
 }
 
 withDefaults(defineProps<FormInputProps>(), {
   type: 'text',
-  size: 'md'
+  size: 'md',
+  iconPosition: 'prepend'
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -29,25 +34,44 @@ const handleInput = (event: Event) => {
 
 <template>
   <div class="space-y-1">
-    <label :for="id" class="text-slate-500 text-sm">{{ label }}</label>
+    <label :for="id" class="text-slate-500 text-sm">
+      {{ label }} <sup v-if="required" class="text-red-500 font-semibold">*</sup>
+    </label>
     <div class="relative">
+      <div class="absolute left-2.5 top-2.5 flex justify-center items-center text-slate-500">
+        <slot name="prepend-icon">
+          <font-awesome-icon
+            v-if="icon && iconPosition === 'prepend'"
+            class="transition-colors duration-300"
+            :class="error ? '!text-red-500' : 'peer-focus:!text-teal-500'"
+            :icon="['fas', icon]"
+          />
+        </slot>
+      </div>
+      <div class="absolute right-2.5 top-2.5 flex justify-center items-center text-slate-500">
+        <slot name="append-icon">
+          <font-awesome-icon
+            v-if="icon && iconPosition === 'append'"
+            class="transition-colors duration-300"
+            :class="error ? '!text-red-500' : 'peer-focus:!text-teal-500'"
+            :icon="['fas', icon]"
+          />
+        </slot>
+      </div>
       <input
         :id="id"
-        class="w-full border border-gray-200 rounded-lg focus:outline-teal-500 peer"
+        class="w-full border rounded-lg peer transition-colors duration-300"
         :class="[
           icon ? 'pl-8' : '',
-          inputSize[size]
+          inputSize[size],
+          error ? 'border-red-500 outline-red-500' : 'focus:outline-teal-500 border-gray-200'
         ]"
         :type="type"
         :value="modelValue"
         :placeholder="placeholder"
         @input="handleInput"
       >
-      <font-awesome-icon
-        v-if="icon"
-        class="absolute left-2.5 top-2.5 text-slate-500 peer-focus:text-teal-500"
-        :icon="['fas', icon]"
-      />
     </div>
+    <p v-if="error && errorMessage" class="text-sm text-red-500">{{ errorMessage }}</p>
   </div>
 </template>

@@ -26,7 +26,9 @@ import {
   faArrowLeft,
   faUsers,
   faUser,
-  faCalendarAlt
+  faCalendarAlt,
+  faEye,
+  faEyeSlash
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
@@ -51,7 +53,9 @@ library.add(
   faArrowLeft,
   faUsers,
   faUser,
-  faCalendarAlt
+  faCalendarAlt,
+  faEye,
+  faEyeSlash
 )
 
 export default FontAwesomeIcon;
