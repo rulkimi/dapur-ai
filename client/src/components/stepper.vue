@@ -1,5 +1,6 @@
 <script setup lang="ts">
 export interface Step {
+  id: string
   title: string
 }
 
@@ -38,8 +39,8 @@ const handleClick = (index: number) => {
       v-for="(step, index) in steps"
       :key="index"
     >
-      <div v-if="index + 1 === currentStep">
-        <slot name="content" :step="step"></slot>
+      <div v-show="index + 1 === currentStep" >
+        <slot :name="step.id"></slot>
       </div>
     </div>
     <div class="flex gap-1">

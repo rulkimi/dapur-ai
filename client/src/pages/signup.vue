@@ -6,9 +6,9 @@ import FoodPreferences from '../components/signup/food-preferences.vue';
 import AccountInformation from '../components/signup/account-information.vue';
 
 const steps: Step[] = [
-  { title: 'Maklumat Akaun' },
-  { title: 'Citarasa Makanan' },
-  { title: 'Cipta Akaun' }
+  { id: 'info', title: 'Maklumat Akaun' },
+  { id: 'preferences', title: 'Citarasa Makanan' },
+  { id: 'create', title: 'Cipta Akaun' }
 ]
 const currentStep = ref<number>(1);
 const handlePreviousStep = () => {
@@ -30,23 +30,21 @@ const handleStepChange = (step: number) => {
     :steps="steps"
     @update:currentStep="handleStepChange"
   >
-    <template #content="{ step }">
-      <div v-if="step.title === 'Maklumat Akaun'">
-        <AccountInformation @next="handleNextStep">
-          <template #footer>
-            <div class="flex gap-1">
-              <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
-            </div>
-          </template>
-        </AccountInformation>
-      </div>
-      <div v-else-if="step.title === 'Citarasa Makanan'">
-        <FoodPreferences>
-          <template #footer-button>
+    <template #info>
+      <AccountInformation @next="handleNextStep">
+        <template #footer>
+          <div class="flex gap-1">
             <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
-          </template>
-        </FoodPreferences>
-      </div>
+          </div>
+        </template>
+      </AccountInformation>
+    </template>
+    <template #preferences>
+      <FoodPreferences>
+        <template #footer-button>
+          <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
+        </template>
+      </FoodPreferences>
     </template>
   </Stepper>
 </template>
