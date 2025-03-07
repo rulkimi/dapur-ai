@@ -10,6 +10,7 @@ interface ButtonProps {
   width?: 'fit' | 'full'
   type?: ButtonHTMLAttributes['type']
   disabled?: boolean
+  loading?: boolean
 }
 
 withDefaults(defineProps<ButtonProps>(), {
@@ -68,7 +69,7 @@ const handleMouseOut = () => {
       buttonSize[size],
       buttonVariant[variant].default,
       buttonWidth[width],
-      disabled ? 'opacity-50 cursor-not-allowed' : buttonVariant[variant].hover
+      disabled || loading ? 'opacity-50 cursor-not-allowed' : buttonVariant[variant].hover
     ]"
     :type="type"
     :disabled="disabled"
@@ -77,6 +78,7 @@ const handleMouseOut = () => {
   >
     <Transition v-if="icon" name="icon" mode="out-in">
       <font-awesome-icon v-if="isHovered && hoverIcon" :icon="['fas', hoverIcon]" :key="hoverIcon" />
+      <font-awesome-icon v-else-if="loading" class="animate-spin" :icon="['fas', 'circle-notch']" />
       <font-awesome-icon v-else :icon="['fas', icon]" :key="icon" />
     </Transition>
     <slot v-else name="icon"></slot>
