@@ -2,9 +2,11 @@
 import HeadingTitle from '../../components/heading-title.vue';
 import Button from '../../components/button.vue';
 
-import { ref } from 'vue';
+import { onBeforeMount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import RecipeCard from '../../components/recipes/recipe-card.vue';
+
+onBeforeMount(() => document.title = 'Hasil Carian - DapurAI')
 
 const route = useRoute();
 const router = useRouter();

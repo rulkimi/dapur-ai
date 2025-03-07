@@ -14,10 +14,11 @@ const router = useRouter();
         class="text-teal-500 text-xl font-semibold flex items-center gap-2 cursor-pointer group"
         @click="router.push('/')"
       >
-        <font-awesome-icon
+        <!-- <font-awesome-icon
           class="group-hover:scale-110 transition-transform duration-300"
           :icon="['fas', 'kitchen-set']"
-        />
+        /> -->
+        <img src="/logo.svg" class="size-6" alt="DapurAI Brand Logo" />
         <span
           class="font-bold bg-clip-text text-transparent bg-gradient-to-t from-teal-600 to-teal-400"
         >

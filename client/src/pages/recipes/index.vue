@@ -3,9 +3,11 @@ import FormInput from '../../components/form-input.vue';
 import Button from '../../components/button.vue';
 import HeadingTitle from '../../components/heading-title.vue';
 
-import { ref } from 'vue';
+import { onBeforeMount, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { capitalizeFirstLetter } from '../../utils';
+
+onBeforeMount(() => document.title = 'Cari Resipi - DapurAI')
 
 const ingredient = ref<string>('')
 const ingredients = ref<string[]>([])

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import FormInput from '../components/form-input.vue';
 import Button from '../components/button.vue';
-import { computed, ref } from 'vue';
+import { computed, onBeforeMount, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 
+onBeforeMount(() => document.title = 'Log Masuk - DapurAI')
 const router = useRouter()
 
 const email = ref<string>('')

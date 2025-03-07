@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import Button from "../components/button.vue";
 import SignupStepper, {
   type Step,
@@ -9,6 +9,8 @@ import AccountInformation from "../components/signup/account-information.vue";
 import { useStepperStore } from "../stores/singup/signup-stepper-store";
 import { useSignupStore } from "../stores/singup";
 import FoodPreferencesReadonly from "../components/signup/food-preferences-readonly.vue";
+
+onBeforeMount(() => document.title = 'Cipta Akaun - DapurAI')
 
 const steps: Step[] = [
   { id: "info", title: "Maklumat Akaun" },
