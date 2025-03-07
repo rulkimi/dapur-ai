@@ -39,7 +39,7 @@ const goToSearchPage = () => {
           v-else
           variant="primary-outline"
           size="lg"
-          @click="router.push('/recipes')"
+          @click="router.push({ path: '/recipes/', query: { trial: 'true' }})"
         >
           Cuba Tanpa Log Masuk
         </Button>
