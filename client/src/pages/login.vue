@@ -11,6 +11,7 @@ const router = useRouter()
 
 const email = ref<string>('')
 const password = ref<string>('')
+const loading = ref<boolean>(false)
 
 const rules = computed(() => ({
   email: { required },
@@ -21,7 +22,12 @@ const v$ = useVuelidate(rules, { email,  password })
 
 const logIn = async () => {
   await v$.value.$validate()
-  console.log('login')
+  loading.value = true
+  try {
+    setTimeout(() => router.push('/recipes'), 3000)
+  } catch (error) {
+    console.error(error)
+  }
 }
 </script>
 
@@ -60,6 +66,7 @@ const logIn = async () => {
           width="full"
           icon="arrow-right-to-bracket"
           type="submit"
+          :loading="loading"
         >
           Log masuk
         </Button>
@@ -68,6 +75,7 @@ const logIn = async () => {
           variant="primary-outline"
           icon="home"
           @click="router.push('/')"
+          :disabled="loading"
         >
           Back Home
         </Button>
@@ -75,12 +83,13 @@ const logIn = async () => {
     </form>
     <p class="block text-slate-500 text-center">
       Tiada akaun?
-      <span
-        class="text-teal-500 cursor-pointer hover:underline"
+      <Button
+        variant="link"
         @click="router.push('/signup')"
+        :disabled="loading"
       >
         Daftar sekarang
-      </span>
+      </Button>
     </p>
   </div>
 </template>

@@ -31,7 +31,7 @@ const buttonVariant = {
     hover: 'hover:bg-teal-500 hover:text-white'
   },
   'link': {
-    default: '',
+    default: '!inline !px-0 text-teal-500',
     hover: 'hover:underline'
   }
 };

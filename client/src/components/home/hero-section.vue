@@ -4,11 +4,10 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const isAuthenticated = computed(() => localStorage.getItem("authenticated"));
+const isAuthenticated = computed(() => JSON.parse(localStorage.getItem("authenticated") || 'false'));
 
 const goToSearchPage = () => {
-  if (isAuthenticated.value) router.push("/recipes");
-  else router.push("/login");
+  router.push("/recipes");
 };
 </script>
 
