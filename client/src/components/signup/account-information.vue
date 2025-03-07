@@ -58,7 +58,7 @@ const handleNextButtonClick = async () => {
   await v$.value.$validate()
   if (!isPasswordMatch()) {
     error.value = true
-    errorMessage.value = 'Passwords do not match.'
+    errorMessage.value = 'Kata laluan tidak sepadan.'
     return
   } else if (!v$.value.$error) { 
     signupStore.setAccountinfo({
