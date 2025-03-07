@@ -89,6 +89,20 @@ const handleInput = (event: Event) => {
         </slot>
       </div>
     </div>
-    <p v-if="error && errorMessage" class="text-sm text-red-500">{{ errorMessage }}</p>
+    <p v-if="error && errorMessage" class="text-sm text-red-500 animate-shake">
+      {{ errorMessage }}
+    </p>
   </div>
 </template>
+
+<style scoped>
+@keyframes shake {
+  0%, 100% { transform: translateX(0) }
+  25%, 75% { transform: translateX(-1px) }
+  50% { transform: translateX(1px) }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+</style>
