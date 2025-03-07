@@ -32,7 +32,7 @@ defineProps<{
     </PreferenceLayout>
 
     <PreferenceLayout title="Tahap Kepedasan">
-      <span class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5">
+      <span class="bg-gray-100 text-slate-600 rounded-md px-2 py-0.5">
         {{ capitalizeFirstLetter(preferences.preferred_spice) }}
       </span>
     </PreferenceLayout>

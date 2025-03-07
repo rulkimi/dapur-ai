@@ -42,11 +42,11 @@ const handleDietaryRestrictions = (e: Event) => {
       <label :for="diet">{{ capitalizeFirstLetter(diet) }}</label>
     </li>
   </ul>
-  <ul class="flex flex-wrap gap-1" v-else>
+  <ul v-else class="flex flex-wrap gap-1">
     <li
       v-for="diet in modelValue"
       :key="diet"
-      class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
+      class="bg-gray-100 text-slate-600 rounded-md px-2 py-0.5"
     >
       {{ capitalizeFirstLetter(diet) }}
     </li>

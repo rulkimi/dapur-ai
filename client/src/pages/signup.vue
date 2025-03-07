@@ -56,7 +56,7 @@ const handleStepChange = (step: number) => {
     <template #preferences>
       <FoodPreferences @next="handleNextStep">
         <template #footer-button>
-          <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
+          <Button variant="primary-outline" @click="handlePreviousStep">Sebelum</Button>
         </template>
       </FoodPreferences>
     </template>
@@ -65,7 +65,14 @@ const handleStepChange = (step: number) => {
         v-if="stepperStore.currentStep === 2"
         readonly
       />
-      <FoodPreferencesReadonly v-if="signupStore.foodPreferences" :preferences="signupStore.foodPreferences" />
+      <FoodPreferencesReadonly
+        v-if="signupStore.foodPreferences"
+        :preferences="signupStore.foodPreferences" 
+      />
+      <div class="flex justify-end gap-1 py-4">
+        <Button variant="primary-outline" @click="handlePreviousStep">Sebelum</Button>
+        <Button>Cipta Akaun</Button>
+      </div>
     </template>
   </SignupStepper>
 </template>

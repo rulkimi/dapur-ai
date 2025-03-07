@@ -76,8 +76,8 @@ const removeAllergy = (index: number) => {
       <li
         v-for="(allergy, index) in modelValue"
         :key="allergy"
-        class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
-        :class="{ 'text-xs' : !readonly}"
+        class="bg-gray-100 text-slate-600 rounded-md px-2 py-0.5"
+        :class="{ 'text-xs hover:bg-gray-200 cursor-pointer' : !readonly}"
       >
         {{ capitalizeFirstLetter(allergy) }}
         <font-awesome-icon
