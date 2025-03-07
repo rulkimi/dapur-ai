@@ -1,15 +1,30 @@
 <script setup lang="ts">
 import { useStepperStore } from "../../stores/singup/signup-stepper-store";
+import { ref, watch, computed } from "vue";
 
 export interface Step {
   id: string;
   title: string;
 }
 
-defineProps<{
+const props = defineProps<{
   currentStep: number;
   steps: Step[];
 }>();
+
+const previousStep = ref<number>(0);
+
+watch(
+  () => props.currentStep,
+  (_, oldStep) => {
+    previousStep.value = oldStep;
+    console.log(transitionName.value)
+  }
+);
+
+const transitionName = computed(() => {
+  return props.currentStep > previousStep.value ? "next" : "prev";
+});
 
 const emit = defineEmits<{
   (e: "update:currentStep", step: number): void;
@@ -49,12 +64,44 @@ const handleClick = (index: number) => {
       </li>
     </ul>
     <div v-for="(step, index) in steps" :key="index">
-      <div v-show="index + 1 === currentStep">
-        <slot :name="step.id"></slot>
-      </div>
+      <transition :name="transitionName" mode="out-in">
+        <div v-show="index + 1 === currentStep">
+          <slot :name="step.id"></slot>
+        </div>
+      </transition>
     </div>
     <div class="flex gap-1">
       <slot name="footer"></slot>
     </div>
   </div>
 </template>
+
+<style scoped>
+.next-enter-active,
+.next-leave-active {
+  transition: all 0.5s ease;
+  position: absolute;
+}
+.next-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+.next-leave-to {
+  opacity: 0;
+  transform: translateX(-100%);
+}
+
+.prev-enter-active,
+.prev-leave-active {
+  transition: all 0.5s ease;
+  position: absolute;
+}
+.prev-enter-from {
+  opacity: 0;
+  transform: translateX(-100%);
+}
+.prev-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+</style>
