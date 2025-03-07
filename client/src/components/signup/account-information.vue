@@ -97,6 +97,7 @@ const handleNextButtonClick = async () => {
             class="flex-grow"
             v-model="birthDate"
             id="birth-date"
+            type="date"
             label="Tarikh lahir"
             placeholder="20 Dec 1999"
             icon="calendar-alt"
