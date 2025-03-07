@@ -1,27 +1,28 @@
 <script setup lang="ts">
-import { useStepperStore } from '../../stores/signup-stepper-store';
+import { useStepperStore } from "../../stores/singup/signup-stepper-store";
 
 export interface Step {
-  id: string
-  title: string
+  id: string;
+  title: string;
 }
 
 defineProps<{
-  currentStep: number
-  steps: Step[]
-}>()
+  currentStep: number;
+  steps: Step[];
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:currentStep', step: number): void
-}>()
+  (e: "update:currentStep", step: number): void;
+}>();
 
-const stepperStore = useStepperStore()
+const stepperStore = useStepperStore();
 const handleClick = (index: number) => {
-  console.log(stepperStore.completedSteps, index + 1)
-  if (stepperStore.completedSteps.includes(index)) { // Check if step is completed
-    emit('update:currentStep', index + 1)
+  console.log(stepperStore.completedSteps, index + 1);
+  if (stepperStore.completedSteps.includes(index)) {
+    // Check if step is completed
+    emit("update:currentStep", index + 1);
   }
-}
+};
 </script>
 
 <template>
@@ -33,7 +34,10 @@ const handleClick = (index: number) => {
         class="flex-grow cursor-pointer"
         :class="[
           currentStep >= index + 1 ? 'text-teal-500' : 'text-slate-500',
-          !stepperStore.completedSteps.includes(index + 1) && index + 1 > currentStep ? 'cursor-not-allowed' : '' 
+          !stepperStore.completedSteps.includes(index + 1) &&
+          index + 1 > currentStep
+            ? 'cursor-not-allowed'
+            : '',
         ]"
         @click="handleClick(index)"
       >
@@ -44,11 +48,8 @@ const handleClick = (index: number) => {
         <span>{{ step.title }}</span>
       </li>
     </ul>
-    <div
-      v-for="(step, index) in steps"
-      :key="index"
-    >
-      <div v-show="index + 1 === currentStep" >
+    <div v-for="(step, index) in steps" :key="index">
+      <div v-show="index + 1 === currentStep">
         <slot :name="step.id"></slot>
       </div>
     </div>

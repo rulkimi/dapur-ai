@@ -1,35 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import Button from '../components/button.vue';
-import SignupStepper, { type Step } from '../components/signup/signup-stepper.vue';
-import FoodPreferences from '../components/signup/food-preferences.vue';
-import AccountInformation from '../components/signup/account-information.vue';
-import { useStepperStore } from '../stores/signup-stepper-store';
+import { ref } from "vue";
+import Button from "../components/button.vue";
+import SignupStepper, {
+  type Step,
+} from "../components/signup/signup-stepper.vue";
+import FoodPreferences from "../components/signup/food-preferences.vue";
+import AccountInformation from "../components/signup/account-information.vue";
+import { useStepperStore } from "../stores/singup/signup-stepper-store";
+import { useSignupStore } from "../stores/singup";
 
 const steps: Step[] = [
-  { id: 'info', title: 'Maklumat Akaun' },
-  { id: 'preferences', title: 'Citarasa Makanan' },
-  { id: 'create', title: 'Cipta Akaun' }
-]
+  { id: "info", title: "Maklumat Akaun" },
+  { id: "preferences", title: "Citarasa Makanan" },
+  { id: "create", title: "Cipta Akaun" },
+];
 
-const stepperStore = useStepperStore()
+const stepperStore = useStepperStore();
 const currentStep = ref<number>(stepperStore.currentStep);
 
 const handlePreviousStep = () => {
   if (currentStep.value === 1) return;
-  stepperStore.setCurrentStep(currentStep.value--)
-}
+  stepperStore.setCurrentStep(currentStep.value--);
+};
 const handleNextStep = () => {
+  const signupStore = useSignupStore()
+  console.table(signupStore.accountInfo)
+  console.table(signupStore.foodPreferences)
   if (currentStep.value === steps.length) return;
-  // completedSteps.value.push(currentStep.value); 
-  stepperStore.setCompletedSteps(currentStep.value)
+  // completedSteps.value.push(currentStep.value);
+  stepperStore.setCompletedSteps(currentStep.value);
   stepperStore.setCurrentStep(currentStep.value++);
-
-  console.log(stepperStore.completedSteps)
-}
+  console.log(stepperStore.completedSteps);
+};
 const handleStepChange = (step: number) => {
   currentStep.value = step;
-}
+};
 </script>
 
 <template>
@@ -48,11 +53,12 @@ const handleStepChange = (step: number) => {
       </AccountInformation>
     </template>
     <template #preferences>
-      <FoodPreferences>
+      <FoodPreferences @next="handleNextStep">
         <template #footer-button>
           <Button variant="primary-outline" @click="handlePreviousStep">Previous</Button>
         </template>
       </FoodPreferences>
     </template>
+    <template #create> </template>
   </SignupStepper>
 </template>

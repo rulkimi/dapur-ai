@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 
-export const useStepperStore = defineStore('counter', {
+export const useStepperStore = defineStore('signupStepper', {
   state: () => ({ 
     currentStep: 1 as number,
     completedSteps: [0] as number[]

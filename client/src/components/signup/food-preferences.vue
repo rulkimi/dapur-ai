@@ -5,8 +5,15 @@ import Allergies from "../../components/preferences/allergies.vue";
 import DietaryRestrictions from "../../components/preferences/dietary-restrictions.vue";
 import PreferredCuisines from "../../components/preferences/preferred-cuisines.vue";
 import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { capitalizeFirstLetter } from "../../utils";
+import { useSignupStore } from "../../stores/singup";
+
+export interface FoodPreferences {
+  dietary_restrictions: string[]
+  preferred_cuisines: string[]
+  allergies: string[]
+  preferred_spice: 'mild' | 'medium' | 'hot'
+}
 
 const dietaryRestrictions = ref<string[]>([]);
 const preferredCuisines = ref<string[]>([]);
@@ -21,18 +28,19 @@ const preferredSpices: PreferredSpice[] = [
   { name: "medium", description: "Saya gemar tahap kepedasan sederhana." },
   { name: "hot", description: "Saya suka makanan pedas!" },
 ];
-const preferredSpice = ref<string>("mild");
+const preferredSpice = ref<'mild' | 'hot' | 'medium'>("mild");
 
-const router = useRouter();
+const signupStore = useSignupStore()
+const emit = defineEmits(['next'])
 const savePreferences = () => {
   const food_preferences = {
     dietary_restrictions: dietaryRestrictions.value,
     allergies: allergies.value,
     preferred_cuisines: preferredCuisines.value,
-    spice_level: preferredSpice.value,
+    preferred_spice: preferredSpice.value,
   };
-  console.table(food_preferences);
-  router.push("/recipes");
+  signupStore.setFoodPreferences(food_preferences)
+  emit('next')
 };
 </script>
 

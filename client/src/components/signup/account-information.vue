@@ -5,8 +5,18 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
+import { useSignupStore } from '../../stores/singup';
+
+export interface AccountInfo {
+  username: string
+  birthDate?: string
+  email: string
+  password: string
+  confirmPassword: string
+}
 
 const router = useRouter()
+const signupStore = useSignupStore()
 
 const username = ref<string>('')
 const birthDate = ref<string>('')
@@ -47,6 +57,13 @@ const handleNextButtonClick = async () => {
     errorMessage.value = 'Passwords do not match.'
     return
   } else if (!v$.value.$error) { 
+    signupStore.setAccountinfo({
+      username: username.value,
+      email: email.value,
+      birthDate: birthDate.value,
+      password: password.value,
+      confirmPassword: confirmPassword.value
+    })
     emit('next')
     emit('step-completed')
   }
