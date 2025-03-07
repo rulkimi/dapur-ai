@@ -8,6 +8,7 @@ import FoodPreferences from "../components/signup/food-preferences.vue";
 import AccountInformation from "../components/signup/account-information.vue";
 import { useStepperStore } from "../stores/singup/signup-stepper-store";
 import { useSignupStore } from "../stores/singup";
+import FoodPreferencesReadonly from "../components/signup/food-preferences-readonly.vue";
 
 const steps: Step[] = [
   { id: "info", title: "Maklumat Akaun" },
@@ -16,6 +17,7 @@ const steps: Step[] = [
 ];
 
 const stepperStore = useStepperStore();
+const signupStore = useSignupStore()
 const currentStep = ref<number>(stepperStore.currentStep);
 
 const handlePreviousStep = () => {
@@ -23,7 +25,6 @@ const handlePreviousStep = () => {
   stepperStore.setCurrentStep(currentStep.value--);
 };
 const handleNextStep = () => {
-  const signupStore = useSignupStore()
   console.table(signupStore.accountInfo)
   console.table(signupStore.foodPreferences)
   if (currentStep.value === steps.length) return;
@@ -64,6 +65,7 @@ const handleStepChange = (step: number) => {
         v-if="stepperStore.currentStep === 2"
         readonly
       />
+      <FoodPreferencesReadonly v-if="signupStore.foodPreferences" :preferences="signupStore.foodPreferences" />
     </template>
   </SignupStepper>
 </template>

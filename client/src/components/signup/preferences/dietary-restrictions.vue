@@ -3,6 +3,7 @@ import { capitalizeFirstLetter } from '../../../utils'
 
 const props = defineProps<{
   modelValue: string[]
+  readonly?: boolean
 }>()
 
 const emits = defineEmits(['update:modelValue'])
@@ -27,7 +28,7 @@ const handleDietaryRestrictions = (e: Event) => {
 </script>
 
 <template>
-  <ul class="grid grid-cols-2 md:grid-cols-4 gap-y-1">
+  <ul v-if="!readonly" class="grid grid-cols-2 md:grid-cols-4 gap-y-1">
     <li
       v-for="diet in dietaryRestrictionExamples"
       :key="diet"
@@ -39,6 +40,15 @@ const handleDietaryRestrictions = (e: Event) => {
         @change="handleDietaryRestrictions"
       >
       <label :for="diet">{{ capitalizeFirstLetter(diet) }}</label>
+    </li>
+  </ul>
+  <ul class="flex flex-wrap gap-1" v-else>
+    <li
+      v-for="diet in modelValue"
+      :key="diet"
+      class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
+    >
+      {{ capitalizeFirstLetter(diet) }}
     </li>
   </ul>
 </template>

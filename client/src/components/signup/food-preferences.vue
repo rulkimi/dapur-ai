@@ -23,7 +23,7 @@ const dietaryRestrictions = ref<string[]>([]);
 const preferredCuisines = ref<string[]>([]);
 const allergies = ref<string[]>([]);
 
-interface PreferredSpice {
+export interface PreferredSpice {
   name: string;
   description: string;
 }
@@ -59,7 +59,7 @@ const savePreferences = () => {
       >
     </div>
 
-    <form @submit.prevent="savePreferences" class="space-y-6">
+    <form @submit.prevent="savePreferences">
       <PreferenceLayout
         title="Ada sebarang keperluan diet?"
         subtitle="Pilih semua yang berkaitan"
@@ -101,7 +101,7 @@ const savePreferences = () => {
         </ul>
       </PreferenceLayout>
 
-      <div class="flex justify-end gap-1">
+      <div class="flex justify-end gap-1 py-4">
         <slot name="footer-button"></slot>
         <Button icon="bookmark" type="submit"> Simpan Citarasa </Button>
       </div>

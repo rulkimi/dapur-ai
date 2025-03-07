@@ -3,6 +3,7 @@ import { capitalizeFirstLetter } from '../../../utils'
 
 const props = defineProps<{
   modelValue: string[]
+  readonly?: boolean
 }>()
 const emit = defineEmits(['update:modelValue'])
 
@@ -26,7 +27,7 @@ const handleCuisines = (e: Event) => {
 </script>
 
 <template>
-  <ul class="grid grid-cols-2 gap-y-1">
+  <ul v-if="!readonly" class="grid grid-cols-2 gap-y-1">
     <li
       v-for="cuisine in cuisineExamples"
       :key="cuisine"
@@ -38,6 +39,15 @@ const handleCuisines = (e: Event) => {
         @change="handleCuisines"
       >
       <label :for="cuisine">{{ capitalizeFirstLetter(cuisine) }}</label>
+    </li>
+  </ul>
+  <ul class="flex flex-wrap gap-1" v-else>
+    <li
+      v-for="cuisine in modelValue"
+      :key="cuisine"
+      class="bg-gray-100 hover:bg-gray-200 cursor-pointer text-slate-600 rounded-md px-2 py-0.5"
+    >
+      {{ capitalizeFirstLetter(cuisine) }}
     </li>
   </ul>
 </template>

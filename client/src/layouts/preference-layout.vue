@@ -11,7 +11,7 @@ defineProps<{
       <h3 class="text-xl font-semibold">{{ title }}</h3>
       <span v-if="subtitle" class="block text-slate-500">{{ subtitle }}</span>
     </div>
-    <div class="space-y-2 md:col-span-3">
+    <div class="space-y-2 py-4 md:col-span-3">
       <slot></slot>
     </div>
   </div>
