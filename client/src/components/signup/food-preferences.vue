@@ -59,7 +59,7 @@ const savePreferences = () => {
       >
     </div>
 
-    <form @submit.prevent="savePreferences">
+    <div>
       <PreferenceLayout
         title="Ada sebarang keperluan diet?"
         subtitle="Pilih semua yang berkaitan"
@@ -103,8 +103,8 @@ const savePreferences = () => {
 
       <div class="flex justify-end gap-1 py-4">
         <slot name="footer-button"></slot>
-        <Button icon="bookmark" type="submit"> Simpan Citarasa </Button>
+        <Button icon="bookmark" @click="savePreferences"> Simpan Citarasa </Button>
       </div>
-    </form>
+    </div>
   </div>
 </template>
