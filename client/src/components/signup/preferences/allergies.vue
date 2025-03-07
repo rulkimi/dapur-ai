@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import FormInput from '../form-input.vue';
-import Button from '../button.vue';
-import { capitalizeFirstLetter } from '../../utils'
+import FormInput from '../../form-input.vue';
+import Button from '../../button.vue';
+import { capitalizeFirstLetter } from '../../../utils'
 import { ref } from 'vue';
 const props = defineProps<{
   modelValue: string[]

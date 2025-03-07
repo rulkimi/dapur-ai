@@ -59,6 +59,11 @@ const handleStepChange = (step: number) => {
         </template>
       </FoodPreferences>
     </template>
-    <template #create> </template>
+    <template #create>
+      <AccountInformation
+        v-if="stepperStore.currentStep === 2"
+        readonly
+      />
+    </template>
   </SignupStepper>
 </template>

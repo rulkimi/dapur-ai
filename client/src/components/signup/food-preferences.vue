@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import Button from "../../components/button.vue";
 import PreferenceLayout from "../../layouts/preference-layout.vue";
-import Allergies from "../../components/preferences/allergies.vue";
-import DietaryRestrictions from "../../components/preferences/dietary-restrictions.vue";
-import PreferredCuisines from "../../components/preferences/preferred-cuisines.vue";
+import Allergies from "./preferences/allergies.vue";
+import DietaryRestrictions from "./preferences/dietary-restrictions.vue";
+import PreferredCuisines from "./preferences/preferred-cuisines.vue";
 import { ref } from "vue";
 import { capitalizeFirstLetter } from "../../utils";
 import { useSignupStore } from "../../stores/singup";
+
+defineProps<{
+  readonly?: boolean
+}>()
 
 export interface FoodPreferences {
   dietary_restrictions: string[]

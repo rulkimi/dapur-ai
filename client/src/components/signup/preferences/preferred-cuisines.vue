@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { capitalizeFirstLetter } from '../../utils'
+import { capitalizeFirstLetter } from '../../../utils'
 
 const props = defineProps<{
   modelValue: string[]

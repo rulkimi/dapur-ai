@@ -11,6 +11,7 @@ interface FormInputProps {
   error?: boolean
   errorMessage?: string
   required?: boolean
+  readonly?: boolean
 }
 
 withDefaults(defineProps<FormInputProps>(), {
@@ -25,6 +26,12 @@ const inputSize = {
   'sm': 'px-2 py-1 h-[28px]',
   'md': 'px-3 py-1.5 h-[36px]',
   'lg': 'px-4 py-2 h-[46px]',
+}
+
+const inputClasses = {
+  error : 'border-red-500 outline-red-500',
+  focus: 'focus:outline-teal-500 border-gray-200',
+  readonly: 'border-b focus:!outline-none pointer-events-none'
 }
 
 const handleInput = (event: Event) => {
@@ -59,12 +66,13 @@ const handleInput = (event: Event) => {
         </slot>
       </div>
       <input
-        :id="id"
-        class="w-full border rounded-lg peer transition-colors duration-300"
+        :id="readonly ? id : `${id}-readonly`"
+        class="w-full peer transition-colors duration-300"
         :class="[
           icon ? 'pl-8' : '',
           inputSize[size],
-          error ? 'border-red-500 outline-red-500' : 'focus:outline-teal-500 border-gray-200'
+          error ? inputClasses.error : inputClasses.focus,
+          readonly ? inputClasses.readonly : 'border rounded-lg'
         ]"
         :type="type"
         :value="modelValue"

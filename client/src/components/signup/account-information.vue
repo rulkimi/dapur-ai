@@ -7,6 +7,10 @@ import { useVuelidate } from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import { useSignupStore } from '../../stores/singup';
 
+defineProps<{
+  readonly?: boolean
+}>()
+
 export interface AccountInfo {
   username: string
   birthDate?: string
@@ -18,11 +22,11 @@ export interface AccountInfo {
 const router = useRouter()
 const signupStore = useSignupStore()
 
-const username = ref<string>('')
-const birthDate = ref<string>('')
-const email = ref<string>('')
-const password = ref<string>('')
-const confirmPassword = ref<string>('')
+const username = ref<string>(signupStore.accountInfo?.username || '')
+const birthDate = ref<string>(signupStore.accountInfo?.birthDate || '')
+const email = ref<string>(signupStore.accountInfo?.email || '')
+const password = ref<string>(signupStore.accountInfo?.password || '')
+const confirmPassword = ref<string>(signupStore.accountInfo?.confirmPassword || '')
 
 const showPassword = ref<boolean>(false)
 const showConfirmPassword = ref<boolean>(false)
@@ -77,7 +81,8 @@ const handleNextButtonClick = async () => {
       <div class="col-span-3 space-y-2">
         <div class="flex flex-col md:flex-row gap-2">
           <FormInput
-            required
+            :readonly="readonly"
+            :required="!readonly"
             class="flex-grow"
             v-model="username"
             id="username"
@@ -88,6 +93,7 @@ const handleNextButtonClick = async () => {
             :error-message="v$.username.$error ? 'Nama pengguna diperlukan' : ''"
           />
           <FormInput
+            :readonly="readonly"
             class="flex-grow"
             v-model="birthDate"
             id="birth-date"
@@ -98,7 +104,8 @@ const handleNextButtonClick = async () => {
         </div>
         <div class="space-y-2">
           <FormInput
-            required
+            :readonly="readonly"
+            :required="!readonly"
             v-model="email"
             id="email"
             label="E-mel"
@@ -108,7 +115,8 @@ const handleNextButtonClick = async () => {
             :error-message="v$.email.$error ? 'Emel diperlukan' : ''"
           />
           <FormInput
-            required
+            v-if="!readonly"
+            :required="!readonly"
             v-model="password"
             id="password"
             :type="showPassword ? 'text' : 'password'"
@@ -128,6 +136,7 @@ const handleNextButtonClick = async () => {
             </template>
           </FormInput>
           <FormInput
+            v-if="!readonly"
             required
             v-model="confirmPassword"
             id="confirm-password"
