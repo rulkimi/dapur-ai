@@ -7,12 +7,12 @@ const route = useRoute();
 </script>
 
 <template>
-  <AppHeader v-if="route.path !== '/login' && route.path !== '/signup'" />
+  <AppHeader v-if="route.path !== '/login'" />
   <div
     :class="
       route.path !== '/login'
         ? 'max-w-7xl mx-auto p-6'
-        : 'min-h-screen flex items-center justify-center'
+        : 'min-h-screen flex items-center justify-center p-4'
     "
   >
     <slot></slot>

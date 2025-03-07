@@ -28,7 +28,8 @@ import {
   faUser,
   faCalendarAlt,
   faEye,
-  faEyeSlash
+  faEyeSlash,
+  faCircleNotch
 } from '@fortawesome/free-solid-svg-icons'
 
 /* add icons to the library */
@@ -55,7 +56,8 @@ library.add(
   faUser,
   faCalendarAlt,
   faEye,
-  faEyeSlash
+  faEyeSlash,
+  faCircleNotch
 )
 
 export default FontAwesomeIcon;

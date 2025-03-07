@@ -27,7 +27,8 @@ const logIn = async () => {
 
 <template>
   <div class="custom-card bg-white max-w-md mx-auto space-y-5">
-    <font-awesome-icon class="text-teal-500 text-6xl mx-auto block" :icon="['fas', 'kitchen-set']" />
+    <!-- <font-awesome-icon class="text-teal-500 text-6xl mx-auto block" :icon="['fas', 'kitchen-set']" /> -->
+     <img src="/logo.svg" class="size-24 mx-auto block" alt="DapurAI Brand Logo">
     <div class="text-center mx-auto space-y-2">
       <span class="block text-3xl font-semibold">DapurAI</span>
       <span class="block text-slate-500">Cari resipi yang sedap dengan bahan-bahan yang anda ada di dapur</span>
