@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useSlots } from 'vue'
+import { computed, useSlots } from 'vue'
 
 interface FormInputProps {
   modelValue: string
@@ -14,13 +14,17 @@ interface FormInputProps {
   errorMessage?: string
   required?: boolean
   readonly?: boolean
+  autocomplete?: 'on' | 'off'
 }
 
-withDefaults(defineProps<FormInputProps>(), {
+const props = withDefaults(defineProps<FormInputProps>(), {
   type: 'text',
   size: 'md',
-  iconPosition: 'prepend'
+  iconPosition: 'prepend',
+  autocomplete: 'on'
 })
+
+const computedId = computed(() => props.readonly ? `${props.id}-readonly` : props.id)
 
 const emit = defineEmits(['update:modelValue'])
 const slots = useSlots()
@@ -46,12 +50,12 @@ const handleInput = (event: Event) => {
 
 <template>
   <div class="space-y-1">
-    <label :for="id" class="text-slate-500 text-sm">
+    <label :for="computedId" class="text-slate-500 text-sm">
       {{ label }} <sup v-if="required" class="text-red-500 font-semibold">*</sup>
     </label>
     <div class="relative peer">
       <input
-        :id="readonly ? id : `${id}-readonly`"
+        :id="computedId"
         class="w-full peer transition-colors duration-300"
         :class="[
           icon ? 'pl-8' : '',
@@ -62,6 +66,7 @@ const handleInput = (event: Event) => {
         :type="type"
         :value="modelValue"
         :placeholder="placeholder"
+        :autocomplete="autocomplete"
         @input="handleInput"
       >
       <div
