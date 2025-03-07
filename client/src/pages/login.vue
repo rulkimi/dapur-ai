@@ -1,17 +1,26 @@
 <script setup lang="ts">
 import FormInput from '../components/form-input.vue';
 import Button from '../components/button.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useVuelidate } from '@vuelidate/core';
+import { required } from '@vuelidate/validators';
 
 const router = useRouter()
 
 const email = ref<string>('')
 const password = ref<string>('')
 
-const logIn = () => {
+const rules = computed(() => ({
+  email: { required },
+  password: { required }
+}))
+
+const v$ = useVuelidate(rules, { email,  password })
+
+const logIn = async () => {
+  await v$.value.$validate()
   console.log('login')
-  router.push('/preferences')
 }
 </script>
 
@@ -30,6 +39,8 @@ const logIn = () => {
           icon="envelope"
           placeholder="johndoe@mail.com"
           label="Email"
+          :error="v$.email.$error"
+          :error-message="v$.email.$error ? 'Sila masukkan E-mel' : ''"
         />
         <FormInput
           id="password"
@@ -38,6 +49,8 @@ const logIn = () => {
           icon="lock"
           placeholder="・・・・・・・"
           label="Password"
+          :error="v$.password.$error"
+          :error-message="v$.password.$error ? 'Sila masukkan kata laluan' : ''"
         />
       </div>
       <div class="space-y-2">

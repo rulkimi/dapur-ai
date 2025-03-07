@@ -161,7 +161,7 @@ const handleNextButtonClick = async () => {
     </div>
     <div v-if="!readonly" class="flex justify-between gap-1">
       <Button variant="link" @click="router.go(-1)">Back</Button>
-      <Button @click="handleNextButtonClick">Next</Button>
+      <Button @click="handleNextButtonClick" icon="bookmark">Simpan Akaun</Button>
     </div>
   </div>
 </template>
