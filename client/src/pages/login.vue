@@ -24,9 +24,12 @@ const logIn = async () => {
   await v$.value.$validate()
   loading.value = true
   try {
-    setTimeout(() => router.push('/recipes'), 3000)
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    router.push('/recipes')
   } catch (error) {
     console.error(error)
+  } finally {
+    loading.value = false
   }
 }
 </script>
